@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+	  <PackageId>Custom.Toast</PackageId>
+	  <Version>1.0.0</Version>
+	  <Authors>Miguel Robinson</Authors>
+	  <Company>Miguel Robinson</Company>
+	  <Description>Reusable Blazor Toast Notification Component</Description>
+	  <PackageTags>blazor;toast;notification;bootstrap</PackageTags>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
+  </ItemGroup>
+
+</Project>

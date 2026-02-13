@@ -1,0 +1,100 @@
+﻿@if (IsVisible)
+{
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3"
+         style="z-index: 1100">
+
+        <div class="toast show text-bg-@ToastColor border-0"
+             role="alert"
+             aria-live="assertive"
+             aria-atomic="true">
+
+            <div class="toast-header text-bg-@ToastColor d-flex align-items-center gap-2">
+
+                <svg class="bi flex-shrink-0"
+                     width="20"
+                     height="20"
+                     role="img"
+                     aria-label="@AriaLabel">
+                    <use href="@IconHref" />
+                </svg>
+
+                <strong class="me-auto">@Type</strong>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        aria-label="Close"
+                        @onclick="CloseToast">
+                </button>
+            </div>
+
+            <div class="toast-body">
+                @Message
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ToastType Type { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public int AutoCloseDelay { get; set; } = 3000;
+
+    private CancellationTokenSource? _cts;
+
+    private bool IsVisible =>
+        Type != ToastType.None && !string.IsNullOrWhiteSpace(Message);
+
+    private string ToastColor => Type switch
+    {
+        ToastType.Success => "success",
+        ToastType.Warning => "warning",
+        ToastType.Danger => "danger",
+        ToastType.Primary => "primary",
+        _ => "secondary"
+    };
+
+    private string IconHref => Type switch
+    {
+        ToastType.Success => "#check-circle-fill",
+        ToastType.Warning => "#exclamation-triangle-fill",
+        ToastType.Danger => "#exclamation-triangle-fill",
+        _ => "#info-fill"
+    };
+
+    private string AriaLabel => $"{Type} toast";
+
+    protected override void OnParametersSet()
+    {
+        _cts?.Cancel();
+
+        if (IsVisible)
+        {
+            _cts = new CancellationTokenSource();
+            _ = AutoCloseAsync(_cts.Token);
+        }
+    }
+
+    private async Task AutoCloseAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(AutoCloseDelay, token);
+            if (!token.IsCancellationRequested)
+                await CloseToast();
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task CloseToast()
+    {
+        _cts?.Cancel();
+        await OnClose.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

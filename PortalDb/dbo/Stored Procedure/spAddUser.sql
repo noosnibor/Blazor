@@ -1,0 +1,48 @@
+﻿CREATE PROCEDURE [dbo].[spAddUser]
+	@pstrUsername       NVARCHAR(50), 
+    @pstrPassword       NVARCHAR(255),  
+    @pstrFirstname      NVARCHAR(50), 
+    @pstrLastname       NVARCHAR(50), 
+    @pstrEmailAddress   NVARCHAR(50),
+    @pstrLocationKey    NVARCHAR(10),
+    @plngRoleKey        INT,
+    @pstrCurrencyKey    NVARCHAR(10),
+    @pblnActive         BIT,
+    @pdtmStart          DATETIME2(0),
+    @pdtmEnd            DATETIME2(0),
+    @pstrWho            NVARCHAR(50), 
+    @pdtmWhen           DATETIME2(0)
+AS
+BEGIN
+    INSERT INTO tblUser(
+                        flngVer,
+                        fstrUsername, 
+                        fstrPassword,
+                        fstrFirstname, 
+                        fstrLastname, 
+                        fstrEmailAddress, 
+                        fstrLocationKey, 
+                        flngRoleKey, 
+                        fstrCurrencyKey, 
+                        fblnActive, 
+                        fblnPasswordChanged, 
+                        fdtmStart, 
+                        fdtmEnd, 
+                        fstrWho, 
+                        fdtmWhen)
+    VALUES (0, 
+            @pstrUsername, 
+            @pstrPassword, 
+            @pstrFirstname, 
+            @pstrLastname, 
+            @pstrEmailAddress, 
+            @pstrLocationKey, 
+            @plngRoleKey,
+            @pstrCurrencyKey, 
+            @pblnActive, 
+            0, 
+            @pdtmStart, 
+            @pdtmEnd, 
+            @pstrWho, 
+            @pdtmWhen);
+END
