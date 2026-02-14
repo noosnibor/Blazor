@@ -20,6 +20,7 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess.SqlDataAccess>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ICollectionService, CollectionService>();
 
 // Toast
 builder.Services.AddCustomToast();

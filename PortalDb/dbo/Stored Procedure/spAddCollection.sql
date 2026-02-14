@@ -1,4 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spAddCollection]
+    @plngCollectionKey      INT,
 	@pstrFirstname          VARCHAR(50),
 	@pstrLastname           VARCHAR(50),
 	@pstrEmailAddress       VARCHAR(50),
