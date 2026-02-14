@@ -8,5 +8,5 @@
     [fstrWho] NVARCHAR(50) NOT NULL,  
     [fdtmWhen] DATETIME2(0) NOT NULL,
     CONSTRAINT PK_tblLocation PRIMARY KEY (fstrLocationKey, flngVer),
-    CONSTRAINT UQ_tblLocation UNIQUE ([fstrLocationName])
+
 )

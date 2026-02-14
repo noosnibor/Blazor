@@ -32,7 +32,9 @@ BEGIN
             fstrWho, 
             fdtmEffectiveFrom, 
             fdtmEffectiveTo
-    FROM tblCurrency WHERE fstrCurrencyKey = @pstrCurrencyKey AND flngVer = 0
+    FROM tblCurrency WHERE fstrCurrencyKey = @pstrCurrencyKey 
+    AND fstrLocationKey = @pstrLocationKey
+    AND flngVer = 0
 
      UPDATE tblCurrency SET 
         fstrCurrencyKey         = @pstrCurrencyKey, 

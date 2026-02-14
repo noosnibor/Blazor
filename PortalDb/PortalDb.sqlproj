@@ -88,4 +88,7 @@
   <ItemGroup>
     <None Include="PortalDb.publish.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="PortalDb.refactorlog" />
+  </ItemGroup>
 </Project>

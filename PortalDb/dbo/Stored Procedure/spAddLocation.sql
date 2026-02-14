@@ -4,7 +4,7 @@
     @pstrLocationAddress      NVARCHAR(50),
     @pblnActive               BIT,
     @pstrWho                  NVARCHAR(50),
-    @pdtmWhen                 DATETIME2
+    @pdtmWhen                DATETIME2
 AS
 BEGIN
     INSERT INTO tblLocation

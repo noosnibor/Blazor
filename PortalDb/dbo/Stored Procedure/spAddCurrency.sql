@@ -1,4 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spAddCurrency]
+    @pstrCurrencyKey     VARCHAR(50),
 	@pstrCurrencyType    VARCHAR(50),
     @pstrLocationKey     VARCHAR(50),
     @pcurAmount          DECIMAL(18,2),
@@ -9,6 +10,7 @@
 AS
 BEGIN
     INSERT INTO tblCurrency (
+    fstrCurrencyKey,
     flngVer, 
     fstrCurrencyType, 
     fstrLocationKey, 
@@ -19,6 +21,7 @@ BEGIN
     fdtmEffectiveTo)
 
     VALUES (
+    @pstrCurrencyKey,
     0, 
     @pstrCurrencyType, 
     @pstrLocationKey, 

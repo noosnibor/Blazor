@@ -1,0 +1,189 @@
+﻿@typeparam TItem
+
+<!-- Search -->
+<div class="col mt-1 p-0">
+    <div class="row">
+        <div class="col-md-12">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search records..."
+                   @bind="SearchText"
+                   @bind:event="oninput" />
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-responsive p-0 mt-1">
+    <table class="table mb-0">
+        <thead class="text-nowrap">
+            @if (HeaderTemplate != null)
+            {
+                @HeaderTemplate
+            }
+        </thead>
+
+        <tbody>
+            @if (PagedItems == null)
+            {
+                <tr>
+                    <td colspan="@ColumnCount" class="text-center">
+                        <p class="fw-semibold">Loading...</p>
+                    </td>
+                </tr>
+            }
+            else if (!PagedItems.Any())
+            {
+                <tr>
+                    <td colspan="@ColumnCount" class="text-center text-danger">
+                        No Data Found
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in PagedItems)
+                {
+                    <tr style="cursor:pointer"
+                        class="@GetRowClass(item)"
+                        @onclick="() => OnRowClick.InvokeAsync(item)">
+                        @RowTemplate?.Invoke(item)
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Footer -->
+<div class="card-footer bg-white mt-2">
+    <div class="row align-items-center g-2">
+
+        <!-- Total -->
+        <div class="col-md-4 text-muted small">
+            Showing @PagedItems!.Count() of @FilteredItems.Count() records
+        </div>
+
+        <!-- Page Size -->
+        <div class="col-md-4 text-center">
+            <select class="form-select form-select-sm w-auto d-inline"
+                    @onchange="PageSizeChanged"
+                    @onclick:stopPropagation="true"
+                    value="@PageSize">
+                <option value="5">5 rows</option>
+                <option value="10">10 rows</option>
+                <option value="25">25 rows</option>
+                <option value="50">50 rows</option>
+                <option value="@FilteredItems.Count()">All</option>
+            </select>
+        </div>
+
+        <!-- Pagination -->
+        <div class="col-md-4">
+            <nav>
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                        <button type="button" class="page-link btn-sm" @onclick="PrevPage">
+                            &laquo; Previous
+                        </button>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <span class="page-link bg-white fw-lighter">
+                            Page @CurrentPage of @TotalPages
+                        </span>
+                    </li>
+
+                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                        <button type="button" class="page-link btn-sm" @onclick="NextPage">
+                            Next &raquo;
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+</div>
+
+@code {
+
+    /* ===================== PARAMETERS ===================== */
+
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+    [Parameter] public EventCallback<TItem> OnRowClick { get; set; }
+    [Parameter] public Func<TItem, string, bool>? SearchPredicate { get; set; }
+    [Parameter] public int ColumnCount { get; set; }
+    [Parameter] public int PageSize { get; set; } = 5;
+    [Parameter] public Func<TItem, bool>? IsInactive { get; set; }
+
+    /* ===================== STATE ===================== */
+
+    private int CurrentPage = 1;
+
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            _searchText = value;
+            CurrentPage = 1;
+        }
+    }
+
+    /* ===================== DATA ===================== */
+
+    private IEnumerable<TItem> FilteredItems =>
+        string.IsNullOrWhiteSpace(SearchText) || SearchPredicate == null
+            ? Items
+            : Items.Where(x => SearchPredicate(x, SearchText)).ToList();
+
+    private int TotalPages =>
+        PageSize <= 0
+            ? 1
+            : Math.Max(1, (int)Math.Ceiling(FilteredItems.Count() / (double)PageSize));
+
+    private IEnumerable<TItem> PagedItems =>
+        PageSize <= 0
+            ? FilteredItems
+            : FilteredItems
+                .Skip((CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+    /* ===================== METHODS ===================== */
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+            CurrentPage++;
+    }
+
+    private void PrevPage()
+    {
+        if (CurrentPage > 1)
+            CurrentPage--;
+    }
+
+    private void PageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int size))
+        {
+            PageSize = size;
+            CurrentPage = 1;
+        }
+    }
+
+    private string GetRowClass(TItem item)
+    {
+        if (IsInactive?.Invoke(item) == true)
+        {
+            return "table-secondary text-muted opacity-50";
+        }
+
+        return string.Empty;
+    }
+}

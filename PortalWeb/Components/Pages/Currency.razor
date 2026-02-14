@@ -1,0 +1,293 @@
+﻿@page "/currency"
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject ILocationService LocationService
+@inject ICurrencyService CurrencyService
+
+
+<div class="container-fluid ">
+
+    <!-- ========== Form =========== -->
+    <EditForm Model="parameter" OnValidSubmit="OnFormSubmit">
+        <DataAnnotationsValidator />
+
+        <!-- ========== Header ========== -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+            <span>Currency Module</span>
+            <div>
+                <button class="btn btn-sm @(canUpdate ? "btn-info text text-black" : "btn-primary text-white") border-0"
+                        type="submit"
+                        disabled="@submitting">
+                    @if (submitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        @(canUpdate ? "Update Currency" : "Add Currency")
+                    }
+
+                </button>
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        @onclick="ResetProperties">
+                    Discard
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== Content ========== -->
+        <div class="row mt-3">
+
+            <!-- Left Side -->
+            <div class="col-lg-6">
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Currency Code</label>
+                    <div class="col-sm-9">
+                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.CurrencyKey))"
+                                   @bind-Value="parameter.CurrencyKey"
+                                   placeholder="Required"
+                                   maxlength="3" />
+                        <ValidationMessage For="@(() => parameter.CurrencyKey)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Currency Type</label>
+                    <div class="col-sm-9">
+                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.CurrencyType))"
+                                   @bind-Value="parameter.CurrencyType"
+                                   placeholder="Required" />
+                        <ValidationMessage For="@(() => parameter.CurrencyType)" />
+                    </div>
+                </div>
+
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Campus</label>
+                    <div class="col-sm-9">
+                        <InputSelect class="@("form-control " + FormValidation.Required(true, parameter.LocationKey))"
+                                     @bind-Value="parameter.LocationKey">
+                            <option value="">Select Location</option>
+                            @foreach (var l in locationModel)
+                            {
+                                <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => parameter.LocationKey)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Amount</label>
+                    <div class="col-sm-9">
+                        <InputNumber class="@("form-control " + FormValidation.Required(true, parameter.Amount))"
+                                     @bind-Value="parameter.Amount" />
+                        <ValidationMessage For="@(() => parameter.Amount)" />
+                    </div>
+                </div>
+
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Effective From</label>
+                    <div class="col-sm-9">
+                        <InputDate class="@("form-control " + FormValidation.Required(false, parameter.EffectiveFrom))"
+                                   @bind-Value="parameter.EffectiveFrom" />
+                        <ValidationMessage For="@(() => parameter.EffectiveFrom)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Effective To</label>
+                    <div class="col-sm-9">
+                        <InputDate class="@("form-control " + FormValidation.Required(true, parameter.EffectiveTo))"
+                                   @bind-Value="parameter.EffectiveTo" />
+                        <ValidationMessage For="@(() => parameter.EffectiveTo)" />
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- Right Side -->
+            <div class="col-lg-6">
+
+                <div class="row">
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 col-form-label">Who</label>
+                        <div class="col-sm-9">
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.Who"
+                                       disabled />
+                            <ValidationMessage For="@(() => parameter.Who)" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <label class="col-sm-3 col-form-label"></label>
+                        <div class="col-sm-9 pt-2">
+                            <div class="border rounded p-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind-Value="parameter.Active" />
+
+                                    <label class="form-check-label fw-semibold"
+                                           for="autoCloseIssues">
+                                        Activate Currency
+                                    </label>
+
+                                    <div class="text-muted small mt-1">
+                                        A currency must be active to be used the system
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+
+
+
+    </EditForm>
+
+
+
+
+
+</div>
+
+<Pagination TItem="CurrencyModel"
+            Items="currencyModel"
+            OnRowClick="SelectedCurrency"
+            SearchPredicate="SearchCurrency"
+            ColumnCount="6">
+
+    <HeaderTemplate>
+        <tr>
+            <th>Currency Code</th>
+            <th>Currency Description</th>
+            <th>Campus</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Effective From</th>
+            <th>Effective To</th>
+        </tr>
+    </HeaderTemplate>
+
+    <RowTemplate Context="currency">
+        <td>@currency.fstrCurrencyKey</td>
+        <td>@currency.fstrCurrencyType</td>
+        <td>@currency.fstrLocationKey</td>
+        <td>@currency.fcurAmount.ToString("C")</td>
+        <td>
+            <span class="badge @(currency.fblnActive ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">
+                @(currency.fblnActive ? "Active" : "Inactive")
+            </span>
+        </td>
+        <td class="text-muted">
+            @currency.fdtmEffectiveFrom.ToString("MMM dd, yyyy")
+        </td>
+        <td class="text-muted">
+            @currency.fdtmEffectiveTo.ToString("MMM dd, yyyy")
+        </td>
+    </RowTemplate>
+
+</Pagination>
+
+@code {
+    private CurrencyDto                 parameter       = new();
+    private IEnumerable<LocationModel>  locationModel   = [];
+    private IEnumerable<CurrencyModel>  currencyModel  = [];
+    private bool                        submitting      = false;
+    private bool                        canUpdate       = false;
+
+
+    protected override async Task OnInitializedAsync() => await LoadAllDataAsync();
+
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            locationModel = await LocationService.SelectLocation(null, true) ?? [];
+            currencyModel = await CurrencyService.SelectCurrency() ?? [];
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+
+    }
+
+    private async Task ResetProperties()
+    {
+        parameter = new();
+        locationModel = [];
+        submitting = false;
+        canUpdate = false;
+
+        await LoadAllDataAsync();
+    }
+
+    private void SelectedCurrency(CurrencyModel currency)
+    {
+        canUpdate = true;
+        parameter = new()
+        {
+            CurrencyKey = currency.fstrCurrencyKey,
+            CurrencyType = currency.fstrCurrencyType,
+            LocationKey = currency.fstrLocationKey,
+            Amount = currency.fcurAmount,
+            Active = currency.fblnActive,
+            Who = currency.fstrWho,
+            EffectiveFrom = currency.fdtmEffectiveFrom,
+            EffectiveTo = currency.fdtmEffectiveTo
+        };
+    }
+
+    private bool SearchCurrency(CurrencyModel currency, string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        return currency.fstrCurrencyKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        || currency.fstrCurrencyType!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        || currency.fstrLocationKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task OnFormSubmit()
+    {
+        submitting = true;
+        await Task.Delay(1000);
+
+        try
+        {
+            if (string.IsNullOrEmpty(parameter.LocationKey))
+                return;
+
+            var message = await (canUpdate ? CurrencyService.AddOrUpdateCurrency(parameter, false) : CurrencyService.AddOrUpdateCurrency(parameter));
+
+            ToastService.Show(message.Type, message.Message!);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await ResetProperties();
+        }
+    }
+
+}

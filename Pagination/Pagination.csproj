@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+	  <!-- NuGet -->
+	  <PackageId>Custom.Pagination</PackageId>
+	  <Version>1.0.0</Version>
+	  <Authors>Miguel Robinson</Authors>
+	  <Company>Miguel Robinson</Company>
+	  <Description>Reusable Blazor Generic Searchable and Paginated DataTable</Description>
+	  <PackageTags>blazor;datatable;table;pagination;search;components</PackageTags>
+
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
+  </ItemGroup>
+
+</Project>

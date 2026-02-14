@@ -58,3 +58,19 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Custom CSS */
+.table th {
+    background-color: #c9daf8;
+    border-bottom: 2px solid #3b6edc;
+    color: #2f5597;
+    font-weight: 300;
+}
+
+.section-header {
+    background-color: #c9daf8;
+    border-bottom: 2px solid #3b6edc;
+    padding: 6px 10px;
+    font-weight: 300;
+    color: #2f5597;
+}

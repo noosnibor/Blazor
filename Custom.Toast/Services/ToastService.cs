@@ -19,7 +19,7 @@ public class ToastService
     public void ShowInfo(string message)
         => Show(ToastType.Primary, message);
 
-    private void Show(ToastType type, string message)
+    public void Show(ToastType type, string message)
     {
         OnShow?.Invoke(new ToastMessage
         {

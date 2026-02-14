@@ -1,0 +1,259 @@
+﻿@page "/location"
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject ILocationService LocationService
+
+
+<div class="container-fluid ">
+
+    <!-- ========== Form =========== -->
+    <EditForm Model="parameter" OnValidSubmit="OnFormSubmit">
+        <DataAnnotationsValidator />
+
+        <!-- ========== Header ========== -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+            <span>Location Module</span>
+            <div>
+                <button class="btn btn-sm @(canUpdate ? "btn-info text text-black" : "btn-primary text-white") border-0"
+                        type="submit"
+                        disabled="@submitting">
+                    @if (submitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        @(canUpdate ? "Update Location" : "Add Location")
+                    }
+
+                </button>
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        @onclick="ResetProperties">
+                   Discard
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== Content ========== -->
+        <div class="row mt-3">
+
+            <!-- Left Side -->
+            <div class="col-lg-6">
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Campus Code</label>
+                    <div class="col-sm-9">
+                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.LocationKey))"
+                                   @bind-Value ="parameter.LocationKey"
+                                   placeholder = "Required"
+                                   maxlength="3"/>
+                        <ValidationMessage For="@(() => parameter.LocationKey)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Campus Name</label>
+                    <div class="col-sm-9">
+                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.LocationName))"
+                                   @bind-Value="parameter.LocationName"
+                                   placeholder="Required" />
+                        <ValidationMessage For="@(() => parameter.LocationName)" />
+                    </div>
+                </div>
+
+
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Campus Address</label>
+                    <div class="col-sm-9">
+                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.LocationAddress))"
+                                   @bind-Value="parameter.LocationAddress"
+                                   placeholder  = "Required"/>
+                        <ValidationMessage For="@(() => parameter.LocationAddress)" />
+                    </div>
+                </div>
+
+               
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-3 col-form-label">Date From</label>
+                    <div class="col-sm-9">
+                        <InputDate class="@("form-control " + FormValidation.Required(false, parameter.When))"
+                                   @bind-Value="parameter.When" />
+                        <ValidationMessage For="@(() => parameter.When)" />
+                    </div>
+                </div>
+        
+
+            </div>
+
+            <!-- Right Side -->
+            <div class="col-lg-6">
+
+                <div class="row">
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 col-form-label">Who</label>
+                        <div class="col-sm-9">
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.Who"
+                                       disabled/>
+                            <ValidationMessage For="@(() => parameter.Who)" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <label class="col-sm-3 col-form-label"></label>
+                        <div class="col-sm-9 pt-2">
+                            <div class="border rounded p-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input"
+                                                   type="checkbox"
+                                                   @bind-Value="parameter.Active" />
+
+                                    <label class="form-check-label fw-semibold"
+                                           for="autoCloseIssues">
+                                        Activate Location
+                                    </label>
+
+                                    <div class="text-muted small mt-1">
+                                        A location must be active to be used the system
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                </div>
+            </div>
+
+        </div>
+
+
+
+    </EditForm>
+
+    
+
+	
+
+</div>
+
+<Pagination TItem="LocationModel"
+			Items="locationModel"
+			OnRowClick="SelectedLocation"
+			SearchPredicate="SearchLocation"
+			ColumnCount="5">
+
+	<HeaderTemplate>
+		<tr>
+			<th>Location Code</th>
+			<th>Location Name</th>
+			<th>Location Address</th>
+			<th>Status</th>
+			<th>Created</th>
+		</tr>
+	</HeaderTemplate>
+
+	<RowTemplate Context="location">
+		<td>@location.fstrLocationKey</td>
+		<td>@location.fstrLocationName</td>
+		<td class="text-muted">@location.fstrLocationAddress</td>
+		<td>
+			<span class="badge @(location.fblnActive ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">
+				@(location.fblnActive ? "Active" : "Inactive")
+			</span>
+		</td>
+		<td class="text-muted">
+			@location.fdtmWhen.ToString("MMM dd, yyyy hh:mm:ss tt")
+		</td>
+	</RowTemplate>
+
+</Pagination>
+
+@code {
+    private LocationDto                 parameter       = new();
+    private IEnumerable<LocationModel>  locationModel   = [];
+    private bool                        submitting      = false;
+    private bool                        canUpdate       = false;
+
+
+    protected override async Task OnInitializedAsync() => await LoadAllDataAsync();
+
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            locationModel = await LocationService.SelectLocation() ?? [];
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+
+    }
+
+    private async Task ResetProperties()
+    {
+        parameter       = new();
+        locationModel   = [];
+        submitting      = false;
+        canUpdate       = false;
+
+        await           LoadAllDataAsync();
+    }
+
+    private void SelectedLocation(LocationModel location)
+    {
+        canUpdate = true;
+        parameter = new()
+            {
+                LocationKey     = location.fstrLocationKey,
+                LocationName    = location.fstrLocationName,
+                LocationAddress = location.fstrLocationAddress,
+                Active          = location.fblnActive,
+                Who             = location.fstrWho,
+                When            = location.fdtmWhen
+            };
+    }
+
+    private bool SearchLocation(LocationModel location, string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        return location.fstrLocationKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        || location.fstrLocationName!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        || location.fstrLocationAddress!.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task OnFormSubmit()
+    {
+        submitting = true;
+        await Task.Delay(1000);
+
+        try
+        {
+            if (string.IsNullOrEmpty(parameter.LocationKey))
+                return;
+
+            var message = await (canUpdate ? LocationService.AddOrUpdateLocation(parameter, false) : LocationService.AddOrUpdateLocation(parameter));
+
+            ToastService.Show(message.Type, message.Message!);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await ResetProperties();
+        }
+    }
+
+}

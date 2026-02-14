@@ -9,11 +9,11 @@
     [fstrWho] VARCHAR(50) NOT NULL, 
     [fdtmEffectiveFrom] DATETIME2(0) NOT NULL,
     [fdtmEffectiveTo] DATETIME2(0) NULL, 
-    CONSTRAINT PK_tblCurrency PRIMARY KEY (fstrCurrencyKey, flngVer),
+    CONSTRAINT PK_tblCurrency PRIMARY KEY (fstrCurrencyKey, flngVer, fstrLocationKey),
 
       CONSTRAINT UQ_tblCurrency
         UNIQUE
         (
-            fstrLocationKey, fdtmEffectiveFrom, fdtmEffectiveTo
+            fdtmEffectiveFrom, fdtmEffectiveTo
         )
 )

@@ -10,4 +10,10 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Custom.Toast\Custom.Toast.csproj" />
+    <ProjectReference Include="..\Pagination\Pagination.csproj" />
+    <ProjectReference Include="..\SqlDataAccess\SqlDataAccess.csproj" />
+  </ItemGroup>
+
 </Project>

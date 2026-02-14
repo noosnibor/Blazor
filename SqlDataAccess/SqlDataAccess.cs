@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace SqlDataAccess;
 
@@ -21,14 +23,16 @@ public interface ISqlDataAccess
     void RollbackTransaction(IDbTransaction? dbTransactions = null);
 }
 
-public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
+public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
 {
-    private readonly IDbConnection dbConnection = dbConnection;
+    private IDbConnection? dbConnection;
     private IDbTransaction? dbTransaction = null;
     private IDbConnectionState? dbConnectionState = null;
+    private readonly string connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string missing.");
 
     public IDbTransaction BeginTransaction()
     {
+        dbConnection = new SqlConnection(connectionString);
         dbConnection.Open();
         dbConnectionState = IDbConnectionState.Open;
 
@@ -41,7 +45,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         var transaction = dbTransactions ?? dbTransaction;
         transaction?.Commit();
 
-        dbConnection.Close();
+        dbConnection?.Close();
         dbConnectionState = IDbConnectionState.Closed;
     }
 
@@ -50,7 +54,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         var transaction = dbTransactions ?? dbTransaction;
         transaction?.Rollback();
 
-        dbConnection.Close();
+        dbConnection?.Close();
         dbConnectionState = IDbConnectionState.Closed;
     }
 
@@ -61,10 +65,10 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         if (dbConnectionState == IDbConnectionState.Open)
         {
             CommitTransaction();
-
         }
+
         transaction?.Dispose();
-        dbConnection.Dispose();
+        dbConnection?.Dispose();
         dbConnectionState = IDbConnectionState.Closed;
 
     }
@@ -74,7 +78,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         BeginTransaction();
         try
         {
-            var response = await dbConnection.ExecuteAsync(
+            var response = await dbConnection?.ExecuteAsync(
                 sql,
                 parameter,
                 commandType: command,
@@ -104,7 +108,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
     {
         try
         {
-            var response = await dbConnection.ExecuteAsync(
+            var response = await dbConnection?.ExecuteAsync(
                 sql,
                 parameter,
                 commandType: command,
@@ -129,7 +133,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         BeginTransaction();
         try
         {
-            var response = await dbConnection.ExecuteScalarAsync<T>(
+            var response = await dbConnection?.ExecuteScalarAsync<T>(
                 sql,
                 parameter,
                 commandType: command,
@@ -159,7 +163,7 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
     {
         try
         {
-            var response = await dbConnection.ExecuteScalarAsync<T>(
+            var response = await dbConnection?.ExecuteScalarAsync<T>(
                 sql,
                 parameter,
                 commandType: command,
@@ -179,48 +183,50 @@ public class SqlDataAccess(IDbConnection dbConnection) : ISqlDataAccess
         }
     }
 
-    public Task<IEnumerable<T>> QueryAsync<T>(string sql, CommandType commandType, object? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<T>> QueryAsync<T>(string sql, CommandType commandType, object? parameters = null, CancellationToken cancellationToken = default)
     {
+        using IDbConnection connection = new SqlConnection(connectionString);
         var command = new CommandDefinition(sql,
                                             parameters,
-                                            dbTransaction,
                                             commandType: commandType,
                                             cancellationToken: cancellationToken);
 
-        return dbConnection.QueryAsync<T>(command);
+        return await connection!.QueryAsync<T>(command);
     }
 
-    public Task<IEnumerable<T>> QueryAsync<T>(string sql, CommandType commandType, IDbTransaction dbTransactions, object? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<T>> QueryAsync<T>(string sql, CommandType commandType, IDbTransaction dbTransactions, object? parameters = null, CancellationToken cancellationToken = default)
     {
+        using IDbConnection connection = new SqlConnection(connectionString);
         var command = new CommandDefinition(sql,
                                              parameters,
                                              dbTransactions,
                                              commandType: commandType,
                                              cancellationToken: cancellationToken);
 
-        return dbConnection.QueryAsync<T>(command);
+        return await connection!.QueryAsync<T>(command);
     }
 
-    public Task<T?> QueryFirstOrDefaultAsync<T>(string sql, CommandType commandType, object? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<T?> QueryFirstOrDefaultAsync<T>(string sql, CommandType commandType, object? parameters = null, CancellationToken cancellationToken = default)
     {
+        using IDbConnection connection = new SqlConnection(connectionString);
         var command = new CommandDefinition(sql,
                                              parameters,
-                                             dbTransaction,
                                              commandType: commandType,
                                              cancellationToken: cancellationToken);
 
-        return dbConnection.QueryFirstOrDefaultAsync<T>(command);
+        return await connection!.QueryFirstOrDefaultAsync<T>(command);
     }
 
-    public Task<T?> QueryFirstOrDefaultAsync<T>(string sql, CommandType commandType, IDbTransaction dbTransactions, object? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<T?> QueryFirstOrDefaultAsync<T>(string sql, CommandType commandType, IDbTransaction dbTransactions, object? parameters = null, CancellationToken cancellationToken = default)
     {
+        using IDbConnection connection = new SqlConnection(connectionString);
         var command = new CommandDefinition(sql,
                                              parameters,
                                              dbTransactions,
                                              commandType: commandType,
                                              cancellationToken: cancellationToken);
 
-        return dbConnection.QueryFirstOrDefaultAsync<T>(command);
+        return await connection!.QueryFirstOrDefaultAsync<T>(command);
     }
 
 }
