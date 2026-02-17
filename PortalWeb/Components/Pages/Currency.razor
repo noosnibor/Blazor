@@ -5,19 +5,31 @@
 @inject ToastService ToastService
 @inject ILocationService LocationService
 @inject ICurrencyService CurrencyService
+@inject IJSRuntime JS
 
+<!--Auto scroll-->
+<div id="autoScroll"></div>
 
 <div class="container-fluid ">
 
     <!-- ========== Form =========== -->
     <EditForm Model="parameter" OnValidSubmit="OnFormSubmit">
-        <DataAnnotationsValidator />
+        <DataAnnotationsValidator />            
 
         <!-- ========== Header ========== -->
         <div class="section-header d-flex justify-content-between align-items-center">
-            <span>Currency Module</span>
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/currency.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Currency Module</span>
+                    <small class="lh-1 small-text">Manage and configure system currencies</small>
+                </div>
+            </div>
+
             <div>
-                <button class="btn btn-sm @(canUpdate ? "btn-info text text-black" : "btn-primary text-white") border-0"
+                <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
                         type="submit"
                         disabled="@submitting">
                     @if (submitting)
@@ -31,8 +43,8 @@
                     {
                         @(canUpdate ? "Update Currency" : "Add Currency")
                     }
-
                 </button>
+
                 <button class="btn btn-sm btn-secondary border-0"
                         type="button"
                         @onclick="ResetProperties">
@@ -42,132 +54,132 @@
         </div>
 
         <!-- ========== Content ========== -->
-        <div class="row mt-3">
+        <div class="card shadow-none border-1 rounded-0 p-4">
+            <div class="row mt-3">
 
-            <!-- Left Side -->
-            <div class="col-lg-6">
+                <div class="col-lg-6">
+               
+                   
+                   
 
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Currency Code</label>
-                    <div class="col-sm-9">
-                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.CurrencyKey))"
-                                   @bind-Value="parameter.CurrencyKey"
-                                   placeholder="Required"
-                                   maxlength="3" />
-                        <ValidationMessage For="@(() => parameter.CurrencyKey)" />
-                    </div>
-                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Currency Code</label>
+                                        <InputText class="form-control"
+                                                    @bind-Value="parameter.CurrencyKey"
+                                                    placeholder="Eg. JMD, USD"
+                                                    maxlength="3" />
+                                        <ValidationMessage For="@(() => parameter.CurrencyKey)" />
+                                    </div>
 
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Currency Type</label>
-                    <div class="col-sm-9">
-                        <InputText class="@("form-control " + FormValidation.Required(true, parameter.CurrencyType))"
-                                   @bind-Value="parameter.CurrencyType"
-                                   placeholder="Required" />
-                        <ValidationMessage For="@(() => parameter.CurrencyType)" />
-                    </div>
-                </div>
-
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Campus</label>
-                    <div class="col-sm-9">
-                        <InputSelect class="@("form-control " + FormValidation.Required(true, parameter.LocationKey))"
-                                     @bind-Value="parameter.LocationKey">
-                            <option value="">Select Location</option>
-                            @foreach (var l in locationModel)
-                            {
-                                <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => parameter.LocationKey)" />
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Amount</label>
-                    <div class="col-sm-9">
-                        <InputNumber class="@("form-control " + FormValidation.Required(true, parameter.Amount))"
-                                     @bind-Value="parameter.Amount" />
-                        <ValidationMessage For="@(() => parameter.Amount)" />
-                    </div>
-                </div>
-
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Effective From</label>
-                    <div class="col-sm-9">
-                        <InputDate class="@("form-control " + FormValidation.Required(false, parameter.EffectiveFrom))"
-                                   @bind-Value="parameter.EffectiveFrom" />
-                        <ValidationMessage For="@(() => parameter.EffectiveFrom)" />
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Effective To</label>
-                    <div class="col-sm-9">
-                        <InputDate class="@("form-control " + FormValidation.Required(true, parameter.EffectiveTo))"
-                                   @bind-Value="parameter.EffectiveTo" />
-                        <ValidationMessage For="@(() => parameter.EffectiveTo)" />
-                    </div>
-                </div>
-
-
-            </div>
-
-            <!-- Right Side -->
-            <div class="col-lg-6">
-
-                <div class="row">
-
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">Who</label>
-                        <div class="col-sm-9">
-                            <InputText class="form-control"
-                                       @bind-Value="parameter.Who"
-                                       disabled />
-                            <ValidationMessage For="@(() => parameter.Who)" />
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <label class="col-sm-3 col-form-label"></label>
-                        <div class="col-sm-9 pt-2">
-                            <div class="border rounded p-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input"
-                                                   type="checkbox"
-                                                   @bind-Value="parameter.Active" />
-
-                                    <label class="form-check-label fw-semibold"
-                                           for="autoCloseIssues">
-                                        Activate Currency
-                                    </label>
-
-                                    <div class="text-muted small mt-1">
-                                        A currency must be active to be used the system
+                                    <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Currency Type</label>
+                                        <InputText class="form-control"
+                                                   @bind-Value="parameter.CurrencyType"
+                                                   placeholder="Eg. Jamaican Dollars" />
+                                        <ValidationMessage For="@(() => parameter.CurrencyType)" />
                                     </div>
                                 </div>
-                            </div>
+
+
+                                <div class="mb-3">
+                        <label class="form-label fw-semibold">Amount</label>
+                                    <InputNumber class="form-control"
+                                                    @bind-Value="parameter.Amount" />
+                                    <ValidationMessage For="@(() => parameter.Amount)" />
+                                </div>
+
+                                <div class="mb-3">
+                        <label class="form-label fw-semibold">Campus</label>
+                                    <InputSelect class="form-select"
+                                                 @bind-Value="parameter.LocationKey">
+                                        <option value="">Select Location</option>
+                                        @foreach (var l in locationModel)
+                                        {
+                                            <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => parameter.LocationKey)" />
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Effective From</label>
+                                        <InputDate class="form-control"
+                                                   @bind-Value="parameter.EffectiveFrom" />
+                                        <ValidationMessage For="@(() => parameter.EffectiveFrom)" />                              
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Effective To</label>
+                                        <InputDate class="form-control"
+                                                   @bind-Value="parameter.EffectiveTo" />
+                                        <ValidationMessage For="@(() => parameter.EffectiveTo)" />
+                                    </div>
+                                </div>                   
+                  
+                    </div>
+          
+
+                <div class="col-lg-6">
+              
+                    
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input"
+                                        type="checkbox"
+                                        @bind-Value="parameter.Active" />
+
+                        <label class="form-check-label fw-semibold"
+                                for="autoCloseIssues">
+                            Activate Currency
+                        </label>
+
+                        <div class="text-muted small mt-1">
+                            A currency must be active to be used the system
                         </div>
                     </div>
-
-
+                   
+                              
                 </div>
+
             </div>
-
         </div>
-
-
-
     </EditForm>
-
-
-
-
-
 </div>
 
+<!-- ==========Table Header========== -->
+<div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+    <div class="d-flex align-items-center">
+        <img width="50" height="50" src="/img/table.png" class="me-2" />
+
+        <div class="d-flex flex-column">
+            <span class="fw-semibold">Table Data</span>
+            <small class="lh-1 small-text">Show all active and inactive currencies</small>
+        </div>
+    </div>
+
+    <div>
+        <button class="btn btn-sm btn-secondary border-0"
+                type="button"
+                disabled="@reload"
+                @onclick="ReloadTableData">
+            @if (reload)
+            {
+                <span class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"></span>
+                <span>Refreshing Table...</span>
+            }
+            else
+            {
+               @("Refresh")
+            }
+        </button>
+    </div>
+</div>
+
+<!-- ==========Table========== -->
 <Pagination TItem="CurrencyModel"
             Items="currencyModel"
             OnRowClick="SelectedCurrency"
@@ -209,8 +221,9 @@
 @code {
     private CurrencyDto                 parameter       = new();
     private IEnumerable<LocationModel>  locationModel   = [];
-    private IEnumerable<CurrencyModel>  currencyModel  = [];
+    private IEnumerable<CurrencyModel>  currencyModel   = [];
     private bool                        submitting      = false;
+    private bool                        reload          = false;
     private bool                        canUpdate       = false;
 
 
@@ -240,7 +253,15 @@
         await LoadAllDataAsync();
     }
 
-    private void SelectedCurrency(CurrencyModel currency)
+    private async Task ReloadTableData()
+    {
+        reload = true;
+        await Task.Delay(1000);
+        await LoadAllDataAsync();
+        reload = false;
+    }
+
+    private async Task SelectedCurrency(CurrencyModel currency)
     {
         canUpdate = true;
         parameter = new()
@@ -254,6 +275,7 @@
             EffectiveFrom = currency.fdtmEffectiveFrom,
             EffectiveTo = currency.fdtmEffectiveTo
         };
+        await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
     }
 
     private bool SearchCurrency(CurrencyModel currency, string searchText)

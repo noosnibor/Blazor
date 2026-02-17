@@ -6,7 +6,10 @@
 @inject ILocationService LocationService
 @inject ICurrencyService CurrencyService
 @inject ICollectionService CollectionService
+@inject IJSRuntime JS
 
+<!--Auto scroll-->
+<div id="autoScroll"></div>
 
 <div class="container-fluid ">
 
@@ -16,20 +19,18 @@
 
         <!-- ========== Header ========== -->
         <div class="section-header d-flex justify-content-between align-items-center">
-            <span>Collection Module</span>
-            <span class="">
-                <select class="form-select form-select-sm"
-                        @bind="selectedCollectionNumber"
-                        @bind:after="OnSelectedValueChanged"
-                        aria-label="Small select example">
-                    @foreach (var item in MemoryStoredData.GetCollectionNumber())
-                    {
-                        <option value="@item.flngCollectionNumberKey">@item.fstrCollectionNumberType</option>
-                    }
-                </select>
-            </span>
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/collection.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Collection Module</span>
+                    <small class="lh-1 small-text">Manage how payments are collected</small>
+                </div>
+            </div>
+
             <div>
-                <button class="btn btn-sm @(canUpdate ? "btn-info text text-black" : "btn-primary text-white") border-0"
+                <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
                         type="submit"
                         disabled="@submitting">
                     @if (submitting)
@@ -43,8 +44,8 @@
                     {
                         @(canUpdate ? "Update Collection" : "Add Collection")
                     }
-
                 </button>
+
                 <button class="btn btn-sm btn-secondary border-0"
                         type="button"
                         @onclick="ResetProperties">
@@ -54,186 +55,195 @@
         </div>
 
         <!-- ========== Content ========== -->
-        <div class="row mt-3">
+        <div class="card border-1 rounded-0 p-4">
+            <div class="row mt-3">
 
-            <!-- Left Side -->
-            <div class="col-lg-6">
 
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Collection No.</label>
-                    <div class="col-sm-9">
-                        <InputNumber class="form-control"
-                                   @bind-Value="selectedCollectionNumber"
-                                   disabled />
-                        <ValidationMessage For="@(() => parameter.CollectionNumber)" />
-                    </div>
-                </div>
+                <!-- Left Side -->
+                <div class="col-lg-6">
 
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Collection Date</label>
-                    <div class="col-sm-9">
-                        <InputDate TValue="DateTime?"
-                                   class="@("form-control " + FormValidation.Required(false, parameter.TransactionDate))"
-                                   Value="@parameter.TransactionDate"
-                                   ValueChanged="OnDateChanged"
-                                   ValueExpression="@(() => parameter.TransactionDate)" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Collection No.</label>
+                            <select class="form-select"
+                                    @bind="selectedCollectionNumber"
+                                    @bind:after="OnSelectedValueChanged"
+                                    aria-label="Small select example">
+                                @foreach (var item in MemoryStoredData.GetCollectionNumber())
+                                {
+                                    <option value="@item.flngCollectionNumberKey">@item.fstrCollectionNumberType</option>
+                                }
+                            </select>
+                        </div>
 
-                        <ValidationMessage For="@(() => parameter.TransactionDate)" />
-                    </div>
-                </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Collection Date</label>
+                            <InputDate TValue="DateTime?"
+                                       class="form-control"
+                                       Value="@parameter.TransactionDate"
+                                       ValueChanged="OnDateChanged"
+                                       ValueExpression="@(() => parameter.TransactionDate)" />
 
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Collection Type</label>
-                    <div class="col-sm-9">
-                        <InputSelect class="@("form-control " + FormValidation.Required(true, parameter.CollectionTypeKey))"
-                                     @bind-Value="parameter.CollectionTypeKey">
-                            @foreach (var c in MemoryStoredData.GetCollectionType().Where(a => a.fblnActive == true).ToList())
-                            {
-                                <option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Status</label>
-                    <div class="col-sm-9">
-                        <InputSelect class="@("form-control " + FormValidation.Required(true, parameter.MemberStatusKey))"
-                                     @bind-Value="parameter.MemberStatusKey">
-                            @foreach (var m in MemoryStoredData.GetMemberStatus().Where(a => a.fblnActive == true).ToList())
-                            {
-                                <option value="@m.flngMemberStatusKey">@m.fstrMemberStatus</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => parameter.MemberStatusKey)" />
-                    </div>
-                </div>
-
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-3 col-form-label">Currency</label>
-                    <div class="col-sm-9">
-                        <InputSelect class="@("form-control " + FormValidation.Required(true, parameter.CurrencyKey))"
-                                     @bind-Value="parameter.CurrencyKey">
-                            @foreach (var c in currencyModel!)
-                            {
-                                <option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => parameter.CurrencyKey)" />
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Right Side -->
-            <div class="col-lg-6">
-
-                <div class="row">
-
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">Email Address</label>
-                        <div class="col-sm-9">        
-                            <InputText class="@("form-control " + FormValidation.Required(true, parameter.EmailAddress))"
-                                       @bind-Value="parameter.EmailAddress"
-                                       placeholder="Required" />
-                            <ValidationMessage For="@(() => parameter.EmailAddress)" />
+                            <ValidationMessage For="@(() => parameter.TransactionDate)" />
                         </div>
                     </div>
 
-                     <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">First Name</label>
-                        <div class="col-sm-9">        
-                            <InputText class="@("form-control " + FormValidation.Required(true, parameter.Firstname))"
-                                       @bind-Value="parameter.Firstname"
-                                       placeholder="Required" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Collection Type</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.CollectionTypeKey">
+                                @foreach (var c in MemoryStoredData.GetCollectionType().Where(a => a.fblnActive == true).ToList())
+                                {
+                                    <option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Status</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.MemberStatusKey">
+                                @foreach (var m in MemoryStoredData.GetMemberStatus().Where(a => a.fblnActive == true).ToList())
+                                {
+                                    <option value="@m.flngMemberStatusKey">@m.fstrMemberStatus</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.MemberStatusKey)" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side -->
+                <div class="col-lg-6">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <InputText class="form-control"
+                                   @bind-Value="parameter.EmailAddress"
+                                   placeholder="Eg.john.doe@AppDomain.com" />
+                        <ValidationMessage For="@(() => parameter.EmailAddress)" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">First Name</label>
+                            <InputText class="form-control"
+                                           @bind-Value="parameter.Firstname"
+                                           placeholder="Eg. John"/>
                             <ValidationMessage For="@(() => parameter.Firstname)" />
                         </div>
-                    </div>
 
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">Last Name</label>
-                        <div class="col-sm-9">
-                            <InputText class="@("form-control " + FormValidation.Required(true, parameter.Lastname))"
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Last Name</label>
+                            <InputText class="form-control"
                                        @bind-Value="parameter.Lastname"
-                                       placeholder="Required" />
+                                       placeholder="Eg. Doe"/>
                             <ValidationMessage For="@(() => parameter.Lastname)" />
                         </div>
                     </div>
 
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">Amount</label>
-                        <div class="col-sm-9">
-                            <InputNumber class="@("form-control " + FormValidation.Required(true, parameter.Amount))"
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Currency Type</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.CurrencyKey">
+                                @foreach (var c in currencyModel!)
+                                {
+                                    <option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.CurrencyKey)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Amount</label>
+                            <InputNumber class="form-control"
                                          @bind-Value="parameter.Amount" />
                             <ValidationMessage For="@(() => parameter.Amount)" />
                         </div>
-                    </div>
+                    </div> 
+                    
+                </div>
 
-                    <div class="row mb-3 align-items-center">
-                        <label class="col-sm-3 col-form-label">Payment Type</label>
-                        <div class="col-sm-9">
-                            <InputRadioGroup @bind-Value="parameter.PaymentTypeKey">
-                                @foreach (var p in MemoryStoredData.GetPaymentType().Where(a => a.fblnActive == true).ToList())
-                                {
-                                    <div class="form-check">
-                                        <InputRadio class="form-check-input"
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Type</label>
+                    <InputRadioGroup @bind-Value="parameter.PaymentTypeKey">
+                        <div class="row g-3">
+
+                            @foreach (var p in MemoryStoredData.GetPaymentType().Where(a => a.fblnActive == true).ToList())
+                            {
+                                <div class="col-12 col-md-6">
+                                    <label class="w-100">
+                                        <InputRadio class="d-none"
                                                     Value="@p.flngPaymentKey" />
 
-                                        <label class="form-check-label">
+                                        <div class="payment-bubble text-center
+                                            @(parameter.PaymentTypeKey == p.flngPaymentKey ? "active" : "")">
+
                                             @p.fstrPaymentType
-                                        </label>
-                                    </div>
-                                }
-                            </InputRadioGroup>
 
-                            <ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ========== Summary ========== -->
-        <div class="row mt-3">
-            <!--Left Side-->
-            <div class="col-lg-6">
-                <div class="card mb-3 ">
-
-                    <!-- Header -->
-                    <div class="card-header d-flex justify-content-between align-items-center bg-secondary-subtle">
-                        <div class="d-flex align-items-center">
-                            @*   <img width="30" height="30"
-                                                src="https://img.icons8.com/3d-fluency/94/chart.png"
-                                                class="me-2" /> *@
-                            <span class="fs-6  text-black">Payment Type Summary</span>
-                        </div>
-                    </div>
-
-                    <div class="card-body bg-secondary-subtle">
-                        <div class="d-flex flex-column gap-2">
-
-                            @foreach (var item in sumPaymentTypeModel)
-                            {
-                                <div class="d-flex align-items-center">
-                                    <span class=" me-2">@MemoryStoredData.GetPaymentType().FirstOrDefault(s => s.flngPaymentKey == item.flngPaymentTypeKey)!.fstrPaymentType</span>
-                                    <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
-                                    <span class="fw-semibold text-muted">@item.fcurAmount.ToString("C2")</span>
+                                        </div>
+                                    </label>
                                 </div>
                             }
 
                         </div>
+                    </InputRadioGroup>
+                    <ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========== Summary ========== -->     
+        <div class="row">
+            <!--Left-->
+            <div class="col-lg-6">
+                <div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+                    <div class="d-flex align-items-center">
+                        <img width="50" height="50" src="/img/payment.png" class="me-2" />
+
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">Payment Type Summary</span>
+                            <small class="lh-1 small-text">Show the total payment type currently added to the system</small>
+                        </div>
                     </div>
 
-                    <div class="card-footer bg-secondary-subtle">
+                    <div></div>
+                </div>
+                <div class="card mb-3 rounded-0">
+
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-2">
+                            @if (sumPaymentTypeModel.Any())
+                            {
+                                @foreach (var item in sumPaymentTypeModel)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <span class=" me-2">@MemoryStoredData.GetPaymentType().FirstOrDefault(s => s.flngPaymentKey == item.flngPaymentTypeKey)!.fstrPaymentType</span>
+                                        <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
+                                        <span class="fw-semibold text-muted">@item.fcurAmount.ToString("C2")</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-danger">No Payment Type Found</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-success-subtle rounded-0">
                         <div class="d-flex flex-column gap-2">
 
                             <div class="d-flex align-items-center">
-                                <span class="fw-bold me-2">Grand Total</span>
-                                <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
-                                <span class="fw-bold text-black">@grandTotal.ToString("C2")</span>
+                                <span class="fw-bold text-success me-2">Grand Total</span>
+                                <span class="flex-grow-1 text-black mx-2"></span>
+                                <span class="fw-bold text-success">@grandTotal.ToString("C2")</span>
                             </div>
 
                         </div>
@@ -242,42 +252,53 @@
                 </div>
             </div>
 
-            <!--Right Side-->
+            <!--Right-->
             <div class="col-lg-6">
-                <div class="card mb-3 ">
+                <div class="section-header d-flex justify-content-between align-items-center mt-5">
 
-                    <!-- Header -->
-                    <div class="card-header d-flex justify-content-between align-items-center bg-secondary-subtle">
-                        <div class="d-flex align-items-center">
-                            @*   <img width="30" height="30"
-                                                src="https://img.icons8.com/3d-fluency/94/chart.png"
-                                                class="me-2" /> *@
-                            <span class="fs-6 text-black">Collection Type Summary</span>
+                    <div class="d-flex align-items-center">
+                        <img width="50" height="50" src="/img/type.png" class="me-2" />
+
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">Collection Type Summary</span>
+                            <small class="lh-1 small-text">Show the total collection type currently added to the system</small>
                         </div>
                     </div>
 
-                    <div class="card-body bg-secondary-subtle">
+                    <div></div>
+                </div>
+                <div class="card mb-3 rounded-0">
+
+                    <div class="card-body rounded-0">
                         <div class="d-flex flex-column gap-2">
 
-                            @foreach (var item in sumCollectionTypeModel)
+                            @if (sumCollectionTypeModel.Any())
                             {
-                                <div class="d-flex align-items-center">
-                                    <span class="me-2">@MemoryStoredData.GetCollectionType().FirstOrDefault(s => s.flngCollectionTypeKey == item.flngCollectionTypeKey)!.fstrCollectionType</span>
-                                    <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
-                                    <span class="fw-semibold text-muted">@item.fcurAmount.ToString("C")</span>
-                                </div>
+                                @foreach (var item in sumCollectionTypeModel)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2">@MemoryStoredData.GetCollectionType().FirstOrDefault(s => s.flngCollectionTypeKey == item.flngCollectionTypeKey)!.fstrCollectionType</span>
+                                        <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
+                                        <span class="fw-semibold text-muted">@item.fcurAmount.ToString("C")</span>
+                                    </div>
+                                }
                             }
+                            else
+                            {
+                                <p class="text-danger">No Collection Type Found</p>
+                            }
+                            
 
                         </div>
                     </div>
 
-                    <div class="card-footer bg-secondary-subtle">
+                    <div class="card-footer bg-success-subtle  rounded-0">
                         <div class="d-flex flex-column gap-2">
 
                             <div class="d-flex align-items-center">
-                                <span class=" me-2 fw-bold">Grand Total</span>
-                                <span class="flex-grow-1 border-bottom border-dotted text-black mx-2"></span>
-                                <span class="fw-bold text-black">@grandTotal.ToString("C2")</span>
+                                <span class=" me-2 text-success fw-bold">Grand Total</span>
+                                <span class="flex-grow-1  text-black mx-2"></span>
+                                <span class="fw-bold text-success">@grandTotal.ToString("C2")</span>
                             </div>
 
                         </div>
@@ -289,8 +310,38 @@
 
     </EditForm>
 
-
+    <!--Table-->
     <div class="mt-3">
+        <div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/table.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Table Data</span>
+                    <small class="lh-1 small-text">Show all active and inactive currencies</small>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        disabled="@reload"
+                        @onclick="ReloadTableData">
+                    @if (reload)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Refreshing Table...</span>
+                    }
+                    else
+                    {
+                        @("Refresh")
+                    }
+                </button>
+            </div>
+        </div>
         <Pagination TItem="CollectionModel"
                     Items="collectionModel"
                     OnRowClick="SelectedCollection"
@@ -328,8 +379,6 @@
 
         </Pagination>
     </div>
-
-
 </div>
 
 
@@ -343,6 +392,7 @@
     private IEnumerable<SumPaymentTypeModel> sumPaymentTypeModel = [];
     private bool submitting = false;
     private bool canUpdate = false;
+    private bool reload = false;
     private int selectedCollectionNumber = 0;
     private decimal grandTotal = 0;
 
@@ -356,15 +406,33 @@
             };
         await LoadAllDataAsync();
     }
+
     private async Task OnSelectedValueChanged() => await LoadAllDataAsync();
+
+    private async Task ReloadTableData()
+    {
+        reload = true;
+        await Task.Delay(1000);
+        await LoadAllDataAsync();
+        reload = false;
+    }
+
+    private async Task LoadCurrency()
+    {
+        currencyModel = await CurrencyService.SelectCurrency(null, "HQ", true) ?? [];
+        currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter.TransactionDate!.Value.Date &&
+            c.fdtmEffectiveTo.Date >= parameter.TransactionDate!.Value.Date);
+    }
 
     private async Task LoadAllDataAsync()
     {
         try
         {
+            await LoadCurrency();
+
             locationModel = await LocationService.SelectLocation(null, true) ?? [];
-            currencyModel = await CurrencyService.SelectCurrency(null, "HQ", true) ?? [];
-            collectionModel = await CollectionService.SelectCollection("HQ", DateTime.Today.AddDays(-1));
+            
+            collectionModel = await CollectionService.SelectCollection("HQ", DateTime.Today);
 
             collectionModel = collectionModel.Where(x => x.flngCollectionNumber == selectedCollectionNumber);
 
@@ -400,7 +468,7 @@
         await LoadAllDataAsync();
     }
 
-    private void SelectedCollection(CollectionModel collection)
+    private async Task SelectedCollection(CollectionModel collection)
     {
         canUpdate = true;
         parameter = new()
@@ -410,7 +478,7 @@
             Lastname = collection.fstrLastname,
             EmailAddress = collection.fstrEmailAddress,
             TransactionDate = collection.fdtmTransactionDate,
-            CollectionNumber = collection.flngCollectionNumber,
+            CollectionNumber = selectedCollectionNumber,
             MemberStatusKey = collection.flngMemberStatusKey,
             CollectionTypeKey = collection.flngCollectionTypeKey,
             PaymentTypeKey = collection.flngPaymentTypeKey,
@@ -419,6 +487,7 @@
             CurrencyKey = collection.fstrCurrencyKey,
             When = collection.fdtmWhen
         };
+        await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
     }
 
     private bool SearchCollection(CollectionModel collection, string searchText)

@@ -17,25 +17,5 @@
     fstrLocationKey        VARCHAR(50) NOT NULL,
     fstrWho                VARCHAR(50) NOT NULL,
     fdtmWhen               DATETIME2(0) NOT NULL,
-    CONSTRAINT PK_tblCollection PRIMARY KEY CLUSTERED (flngCollectionKey, flngVer),
-
-    CONSTRAINT UQ_tblCollection_Business
-        UNIQUE
-        (
-            fstrFirstname,
-            fstrLastname,
-            flngMemberStatusKey,
-            flngCollectionTypeKey,
-            flngPaymentTypeKey,
-            fstrCurrencyKey
-        ),
-
-    CONSTRAINT UQ_tblCollection_LocationNumberDate
-        UNIQUE
-        (
-            flngCollectionKey,
-            fstrLocationKey,
-            flngCollectionNumber,
-            fdtmTransactionDate
-        )
+    CONSTRAINT PK_tblCollection PRIMARY KEY CLUSTERED (flngCollectionKey, flngVer, fstrLocationKey)
 )

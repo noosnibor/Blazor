@@ -1,5 +1,6 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f9;
 }
 
 a, .btn-link {
@@ -61,16 +62,87 @@ h1:focus {
 
 /* Custom CSS */
 .table th {
-    background-color: #c9daf8;
+    border: 1px solid #c9daf8;
     border-bottom: 2px solid #3b6edc;
     color: #2f5597;
     font-weight: 300;
 }
 
 .section-header {
-    background-color: #c9daf8;
+/*    background-color: #c9daf8;*/
     border-bottom: 2px solid #3b6edc;
     padding: 6px 10px;
-    font-weight: 300;
-    color: #2f5597;
+    font-weight: 600;
+    font-size: 24px;
+    color: #000000;
+}
+
+.small-text {
+    font-size: 0.80rem;
+    font-weight: 500;
+    color: #545454;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus{
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #3b6edc !important; /* default border color #ced4da*/
+}
+
+.form-control::placeholder {
+    color: #ced4da;
+    opacity: 1;
+}
+
+.form-select:invalid {
+    color: #adb5bd;
+}
+
+.form-label {
+    margin-bottom: 0.2rem;
+   
+}
+
+.validation-message {
+    font-size: 0.88rem;
+    color: #dc3545;
+    opacity: 0.9;
+}
+
+.payment-bubble {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border-radius: 999px;
+    /* Proper visible border */
+    border: 1px solid #dee2e6;
+    /* Glass background */
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease-in-out;
+}
+
+    /* Hover */
+    .payment-bubble:hover {
+        transform: scale(1.04);
+        border-color: #0d6efd;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Selected */
+    .payment-bubble.active {
+        background: rgba(13, 110, 253, 0.12);
+        border-color: #0d6efd;
+        color: #0d6efd;
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.18);
+        transform: scale(1.06);
+    }
+
+.btn:focus,
+.btn:focus-visible {
+    box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
 }

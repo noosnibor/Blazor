@@ -9,7 +9,7 @@ public class CurrencyDto
     public string?      CurrencyKey     { get; set; }
     [Required(ErrorMessage = "Currency Type is required")]
     public string?      CurrencyType    { get; set; }
-    [Required(ErrorMessage = "An location is required")]
+    [Required(ErrorMessage = "A location is required")]
     public string?      LocationKey     { get; set; }
     [Required(ErrorMessage = "An amount is required")]
     [Range(1, 1000000000, ErrorMessage = "Amount must not be zero")]

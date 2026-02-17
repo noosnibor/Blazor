@@ -17,11 +17,10 @@
 AS
 BEGIN
     DECLARE @MaxVer INT;
-    SET @MaxVer = (SELECT MAX(flngVer) FROM tblCollection WHERE flngCollectionKey = @plngCollectionKey) + 1;
+    SET @MaxVer = ISNULL((SELECT MAX(flngVer) FROM tblCollection WHERE flngCollectionKey = @plngCollectionKey), 0) + 1;
 
      INSERT INTO dbo.tblCollection
     (
-        flngCollectionKey,
         flngver,
         fstrFirstname,
         fstrLastname,
@@ -40,7 +39,6 @@ BEGIN
         fdtmWhen
     )
     SELECT
-        flngCollectionKey,
         @MaxVer,
         fstrFirstname,
         fstrLastname,
@@ -57,7 +55,8 @@ BEGIN
         fstrLocationKey,
         fstrWho,
         fdtmWhen   
-   FROM tblCollection WHERE flngCollectionKey = @plngCollectionKey AND flngVer = 0
+   FROM tblCollection WHERE flngCollectionKey = @plngCollectionKey 
+   AND flngVer = 0
 
     UPDATE dbo.tblCollection
                 SET
@@ -76,7 +75,6 @@ BEGIN
                     fstrWho               = @pstrWho,
                     fdtmWhen              = @pdtmWhen
                 WHERE flngCollectionKey   = @plngCollectionKey
-                  AND fstrLocationKey     = @pstrLocationKey
                   AND flngVer             = 0
 
 END

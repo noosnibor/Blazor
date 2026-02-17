@@ -1,0 +1,262 @@
+﻿@page "/detailreport"
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject ILocationService LocationService
+@inject ICurrencyService CurrencyService
+@inject ICollectionService CollectionService
+@inject IJSRuntime JS
+
+
+
+<div class="container-fluid">
+
+	<!-- ========== Form =========== -->
+    <EditForm Model="parameter" OnValidSubmit="OnFormSubmit">
+        <DataAnnotationsValidator />
+
+        <!-- ========== Header ========== -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/daily.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Detail Module</span>
+                    <small class="lh-1 small-text">Return detail information about an individual giving</small>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
+                        type="submit"
+                        disabled="@submitting">
+                    @if (submitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <span>Generate</span>
+                    }
+                </button>
+
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        @onclick="ResetProperties">
+                    Discard
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== Content ========== -->
+        <div class="card border-1 rounded-0 p-4">
+            <div class="row mt-3">
+
+                <!-- Left Side -->
+                <div class="col-lg-6">
+
+                    <label class="form-label fw-semibold">Campus</label>
+                    <InputSelect class="form-select mb-3"
+                                 @bind-Value="parameter.LocationKey">
+                        @foreach (var l in location!)
+                        {
+                            <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => parameter.LocationKey)" />
+                   @*  <AuthorizeView Policy="AdminOnly" Context="authState">
+                        <Authorized>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.LocationKey">
+                                @foreach (var l in location!)
+                                {
+                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+                        </Authorized>
+                        <NotAuthorized>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.LocationKey" disabled>
+                                @foreach (var l in location!)
+                                {
+                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+                        </NotAuthorized>
+                    </AuthorizeView> *@
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Collection Date From</label>
+                            <InputDate class="form-control"
+                                       @bind-Value="parameter.From"
+                                       max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <ValidationMessage For="@(() => parameter.From)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Collection Date To</label>
+                            <InputDate class="form-control"
+                                       @bind-Value="parameter.To"
+                                       max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <ValidationMessage For="@(() => parameter.To)" />
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">First Name</label>
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.Firstname"
+                                       placeholder="Enter First Name" />
+                            <ValidationMessage For="@(() => parameter.Firstname)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Last Name</label>
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.Lastname"
+                                       placeholder="Enter Last Name" />
+                            <ValidationMessage For="@(() => parameter.Lastname)" />
+                        </div>
+                    </div>
+
+                    <label class="form-label fw-semibold">Collection Type</label>
+                    <InputSelect class="form-select mb-3"
+                                 @bind-Value="parameter.CollectionTypeKey">
+                        @foreach (var c in MemoryStoredData.GetCollectionType())
+                        {
+                            <option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
+
+                    <label class="form-label fw-semibold">Payment Type</label>
+                    <InputSelect class="form-select col-sm-9"
+                                 @bind-Value="parameter.PaymentTypeKey">
+                        <option value="0">Select Payment Type</option>
+                        @foreach (var p in MemoryStoredData.GetPaymentType())
+                        {
+                            <option value="@p.flngPaymentKey">@p.fstrPaymentType</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
+                </div>
+
+            </div>
+        </div>
+
+	</EditForm>
+
+    <!--Table-->
+    <div class="mt-3">
+        <div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/table.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Table Data</span>
+                    <small class="lh-1 small-text">Show all active and inactive currencies</small>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        disabled="@reload"
+                        @onclick="ReloadTableData">
+                    @if (reload)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Refreshing Table...</span>
+                    }
+                    else
+                    {
+                        @("Refresh")
+                    }
+                </button>
+            </div>
+        </div>
+
+        <!--Auto scroll-->
+        <div id="autoScroll"></div>
+
+        <Pagination TItem="DetailReportModel"
+                    Items="detailReportModels"
+                    OnRowClick="SelectedRecords"
+                    SearchPredicate="SearchRecords"
+                    ColumnCount="8">
+
+            <HeaderTemplate>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Member Status</th>
+                    <th>Collection Type</th>
+                    <th>Payment Type</th>
+                    <th>Currency</th>
+                    <th>Amount</th>
+                    <th>Local Amount</th>
+                </tr>
+            </HeaderTemplate>
+
+            <RowTemplate Context="detailReportModels">
+                <td>@(detailReportModels.fstrFullname) </td>
+                <td>@MemoryStoredData.GetMemberStatus().FirstOrDefault(m => m.flngMemberStatusKey == @detailReportModels.flngMemberStatusKey)!.fstrMemberStatus </td>
+                <td>@MemoryStoredData.GetCollectionType().FirstOrDefault(m => m.flngCollectionTypeKey == @detailReportModels.flngCollectionTypeKey)!.fstrCollectionType </td>
+                <td>@MemoryStoredData.GetPaymentType().FirstOrDefault(m => m.flngPaymentKey == @detailReportModels.flngPaymentTypeKey)!.fstrPaymentType </td>
+                <td>@detailReportModels.fstrCurrencyKey</td>
+                <td>@detailReportModels.fcurAmount.ToString("N2")</td>
+                <td>@detailReportModels.fcurLocalAmount.ToString("N2")</td>
+
+            </RowTemplate>
+
+        </Pagination>
+    </div>
+
+</div>
+
+@code {
+
+    private DetailReportDto parameter = new();
+    private IEnumerable<DetailReportModel> detailReportModels = [];
+    private IEnumerable<LocationModel>? location = [];
+    private bool canUpdate = false;
+    private bool submitting = false;
+    private bool reload = false;
+
+    private async Task OnFormSubmit()
+    {
+
+    }
+
+    private async Task ResetProperties()
+    {
+
+    }
+
+    private async Task ReloadTableData()
+    {
+
+    }
+
+    private async Task SelectedRecords(DetailReportModel detailReportModels)
+    {
+
+    }
+
+    private bool SearchRecords(DetailReportModel detailReportModels, string searchText)
+    {
+        return false;
+    }
+}
