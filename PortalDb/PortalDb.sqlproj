@@ -84,6 +84,8 @@
     <Build Include="dbo\Stored Procedure\spAddPermission.sql" />
     <Build Include="dbo\Tables\tempPermission.sql" />
     <Build Include="dbo\Stored Procedure\spDeletePermission.sql" />
+    <Build Include="dbo\Stored Procedure\spDetailReport.sql" />
+    <Build Include="dbo\Stored Procedure\spSummaryReport.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PortalDb.publish.xml" />

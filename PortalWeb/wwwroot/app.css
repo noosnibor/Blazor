@@ -146,3 +146,21 @@ h1:focus {
 .btn:focus-visible {
     box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
 }
+
+.radio-card {
+    cursor: pointer;
+    border: 2px solid #dee2e6;
+    transition: all 0.2s ease-in-out;
+    border-radius: 12px;
+}
+
+    .radio-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08);
+    }
+
+.btn-check:checked + .radio-card {
+    border-color: #0d6efd;
+    background-color: #f0f6ff;
+    box-shadow: 0 0.5rem 1rem rgba(13,110,253,.15);
+}

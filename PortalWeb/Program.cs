@@ -21,6 +21,8 @@ builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess.SqlDataAccess>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<UserSession>();
 
 // Toast
 builder.Services.AddCustomToast();

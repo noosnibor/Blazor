@@ -6,6 +6,7 @@
 @inject ILocationService LocationService
 @inject ICurrencyService CurrencyService
 @inject ICollectionService CollectionService
+@inject UserSession User
 @inject IJSRuntime JS
 
 <!--Auto scroll-->
@@ -401,8 +402,8 @@
     {
         parameter = new()
             {
-                CurrencyKey = "JMD",
-                LocationKey = "HQ"
+                CurrencyKey = User.CurrenyKey,
+                LocationKey = User.LocationKey
             };
         await LoadAllDataAsync();
     }
@@ -419,7 +420,7 @@
 
     private async Task LoadCurrency()
     {
-        currencyModel = await CurrencyService.SelectCurrency(null, "HQ", true) ?? [];
+        currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
         currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter.TransactionDate!.Value.Date &&
             c.fdtmEffectiveTo.Date >= parameter.TransactionDate!.Value.Date);
     }
@@ -431,19 +432,19 @@
             await LoadCurrency();
 
             locationModel = await LocationService.SelectLocation(null, true) ?? [];
-            
-            collectionModel = await CollectionService.SelectCollection("HQ", DateTime.Today);
+
+            collectionModel = await CollectionService.SelectCollection(User.LocationKey!, DateTime.Today);
 
             collectionModel = collectionModel.Where(x => x.flngCollectionNumber == selectedCollectionNumber);
 
             sumCollectionTypeModel = collectionModel.GroupBy(c => c.flngCollectionTypeKey)
                                                     .Select(c => new SumCollectionTypeModel(c.Key,
-                                                                                            c.Where(l => l.fstrLocationKey == "HQ")
+                                                                                            c.Where(l => l.fstrLocationKey == User.LocationKey)
                                                                                              .Sum(s => s.fcurLocalAmount)));
 
             sumPaymentTypeModel = collectionModel.GroupBy(c => c.flngPaymentTypeKey)
                                                     .Select(c => new SumPaymentTypeModel(c.Key,
-                                                                                            c.Where(l => l.fstrLocationKey == "HQ")
+                                                                                            c.Where(l => l.fstrLocationKey == User.LocationKey)
                                                                                              .Sum(s => s.fcurLocalAmount)));
             grandTotal = collectionModel.Sum(s => s.fcurLocalAmount);
         }
@@ -458,12 +459,13 @@
     {
         parameter = new()
         {
-            CurrencyKey = "JMD",
-            LocationKey = "HQ"
+            CurrencyKey = User.CurrenyKey,
+            LocationKey = User.LocationKey
         };
         locationModel = [];
         submitting = false;
         canUpdate = false;
+        selectedCollectionNumber = 0;
 
         await LoadAllDataAsync();
     }
