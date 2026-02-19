@@ -86,6 +86,7 @@
     <Build Include="dbo\Stored Procedure\spDeletePermission.sql" />
     <Build Include="dbo\Stored Procedure\spDetailReport.sql" />
     <Build Include="dbo\Stored Procedure\spSummaryReport.sql" />
+    <Build Include="dbo\Stored Procedure\spDailyReport.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PortalDb.publish.xml" />

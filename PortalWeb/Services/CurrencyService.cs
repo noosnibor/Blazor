@@ -47,6 +47,24 @@ public class CurrencyService(ISqlDataAccess sqlDataAccess) : ICurrencyService
         if (model == null)
             return new() { Type = ToastType.Danger, Message = "Invalid" };
 
+        var currency = await SelectCurrency(model.CurrencyKey, model.LocationKey, true);
+
+        if (currency.Count != 0)
+        {
+            var date = currency.Max(d => d.fdtmEffectiveTo).Date;
+
+            if (insert)
+            {
+                if (model.EffectiveFrom <= date)
+                {
+                    return new() { Type = ToastType.Warning, Message = "The effective date from can not be less than the previous effective to" };
+                }
+            }    
+
+           
+        }
+
+
         try
         {
             var parameters = new DynamicParameters();

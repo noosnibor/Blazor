@@ -347,7 +347,10 @@
                     Items="collectionModel"
                     OnRowClick="SelectedCollection"
                     SearchPredicate="SearchCollection"
-                    ColumnCount="8">
+                    ColumnCount="8"
+                    SumSelector="@(s => s.fcurLocalAmount)"
+                    SumColumnIndex="6"
+                    SumLabel="Total">
 
             <HeaderTemplate>
                 <tr>

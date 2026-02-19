@@ -7,6 +7,6 @@ public class DetailReportModel
     public int flngCollectionTypeKey { get; set; }
     public int flngPaymentTypeKey { get; set; }
     public string? fstrCurrencyKey { get; set; }
-    public double fcurAmount { get; set; }
-    public double fcurLocalAmount { get; set; }
+    public decimal fcurAmount { get; set; }
+    public decimal fcurLocalAmount { get; set; }
 }

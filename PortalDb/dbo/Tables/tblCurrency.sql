@@ -8,7 +8,7 @@
     [fblnActive] BIT NOT NULL, 
     [fstrWho] VARCHAR(50) NOT NULL, 
     [fdtmEffectiveFrom] DATETIME2(0) NOT NULL,
-    [fdtmEffectiveTo] DATETIME2(0) NULL, 
-    CONSTRAINT PK_tblCurrency PRIMARY KEY (fstrCurrencyKey, flngVer, fstrLocationKey, fcurAmount),
+    [fdtmEffectiveTo] DATETIME2(0) NOT NULL, 
+    CONSTRAINT PK_tblCurrency PRIMARY KEY (fstrCurrencyKey, flngVer, fstrLocationKey, fcurAmount)
 
 )

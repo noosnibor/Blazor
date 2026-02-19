@@ -1,0 +1,276 @@
+﻿@page "/user"
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject ILocationService LocationService
+@inject ICurrencyService CurrencyService
+@inject ICollectionService CollectionService
+@inject UserSession User
+@inject IJSRuntime JS
+
+<!--Auto scroll-->
+<div id="autoScroll"></div>
+
+<div class="container-fluid ">
+
+    <!-- ========== Form =========== -->
+    <EditForm Model="parameter" OnValidSubmit="OnFormSubmit" @ref="form">
+        <DataAnnotationsValidator />
+
+        <!-- ========== Header ========== -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/user.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Collection Module</span>
+                    <small class="lh-1 small-text">Manage how payments are collected</small>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
+                        type="submit"
+                        disabled="@submitting">
+                    @if (submitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        @(canUpdate ? "Update Collection" : "Add Collection")
+                    }
+                </button>
+
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        @onclick="ResetProperties">
+                    Discard
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== Content ========== -->
+        <div class="card border-1 rounded-0 p-4">
+            <div class="row mt-3">
+
+
+                <!-- Left Side -->
+                <div class="col-lg-6">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">First Name</label>
+                           
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.fstrFirstname" placeholder="Enter a first name" />
+                            <ValidationMessage For="@(() => parameter.fstrFirstname)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Last Name</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control"
+                                           @bind-Value="parameter.fstrLastname" placeholder="Enter a last name" />
+                                <ValidationMessage For="@(() => parameter.fstrLastname)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Username</label>
+                            <InputText class="form-control"
+                                       @bind-Value="parameter.fstrUsername" placeholder="Enter a user name" />
+                            <ValidationMessage For="@(() => parameter.fstrUsername)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Password</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control"
+                                           @bind-Value="parameter.fstrPassword"
+                                           disabled />
+                                <ValidationMessage For="@(() => parameter.fstrPassword)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <label class="form-label fw-semibold">Email Address</label>
+                    <div class="col-12">
+                        <InputText class="form-control"
+                                   @bind-Value="parameter.fstrEmailAddress" placeholder="Enter an email address" />
+                        <ValidationMessage For="@(() => parameter.fstrEmailAddress)" />
+                    </div>
+                   
+                </div>
+
+                <!-- Right Side -->
+                <div class="col-lg-6">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Role</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="parameter.flngRoleKey"
+                                     TValue="int?">
+                            <option value="">Select role</option>
+                            @foreach (var r in MemoryStoredData.GetRoles())
+                            {
+                                <option value="@r.flngRoleKey">@r.fstrRoleName</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => parameter.flngRoleKey)" />
+                    </div>
+
+                    <div class="row">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Campus</label>
+                            <InputSelect TValue="string"
+                                         class="form-select"
+                                         Value="parameter.fstrLocationKey"
+                                         ValueChanged="OnSelectedValueChanged"
+                                         ValueExpression="() => parameter.fstrLocationKey">
+
+                                <option value="">Select location</option>
+
+                                @foreach (var l in locationModel)
+                                {
+                                    <option value="@l.fstrLocationKey">
+                                        @l.fstrLocationName
+                                    </option>
+                                }
+
+                            </InputSelect>
+
+                            <ValidationMessage For="@(() => parameter.fstrLocationKey)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Currency</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="parameter.fstrCurrencyKey" disabled>
+                                <option value="">Select currency</option>
+                                @foreach (var c in currencyModel)
+                                {
+                                    <option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => parameter.fstrCurrencyKey)" />
+                        </div>
+
+                      
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Effective From</label>
+                            <div class="col-sm-9">
+                                <InputDate class="form-control"
+                                           @bind-Value="parameter.fdtmStart" />
+                                <ValidationMessage For="@(() => parameter.fdtmStart)" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Effective To</label>
+                            <InputDate class="form-control"
+                                       @bind-Value="parameter.fdtmEnd" />
+                            <ValidationMessage For="@(() => parameter.fdtmEnd)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-12 pt-2">
+                            <div class="border rounded p-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input"
+                                                   type="checkbox"
+                                                   id="autoCloseIssues"
+                                                   @bind-Value="parameter.fblnActive" />
+
+                                    <label class="form-check-label fw-semibold"
+                                           for="autoCloseIssues">
+                                        Activate User
+                                    </label>
+
+                                    <div class="text-muted small mt-1">
+                                        A user must be active to log into the system
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+            </div>
+        </div>
+
+    </EditForm>
+</div>
+
+@code {
+
+    private UserDto parameter = new();
+    private IEnumerable<LocationModel> locationModel = [];
+    private IEnumerable<CurrencyModel> currencyModel = [];
+    private bool submitting = false;
+    private bool canUpdate = false;
+    private bool reload = false;
+
+    private EditForm? form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
+            locationModel = await LocationService.SelectLocation(null, true) ?? [];
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+
+    }
+
+    private async Task OnSelectedValueChanged(string value)
+    {
+
+        try
+        {
+            parameter.fstrLocationKey = value;
+            currencyModel = await CurrencyService.SelectCurrency(null, value, true) ?? [];
+            parameter.fstrCurrencyKey = currencyModel.FirstOrDefault(x => x.fcurAmount == 1)?.fstrCurrencyKey;
+
+            await InvokeAsync(StateHasChanged);
+
+            form?.EditContext?.Validate();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+
+    }
+
+    private async Task OnFormSubmit()
+    {
+
+    }
+
+    private async Task ResetProperties()
+    {
+        
+    }
+}

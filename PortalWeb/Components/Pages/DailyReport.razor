@@ -1,4 +1,4 @@
-﻿@page "/detailreport"
+﻿@page "/dailyreport"
 
 @rendermode InteractiveServer
 
@@ -22,11 +22,11 @@
 		<div class="section-header d-flex justify-content-between align-items-center">
 
 			<div class="d-flex align-items-center">
-				<img width="50" height="50" src="/img/type.png" class="me-2" />
+				<img width="50" height="50" src="/img/daily.png" class="me-2" />
 
 				<div class="d-flex flex-column">
-					<span class="fw-semibold">Detail Module</span>
-					<small class="lh-1 small-text">Return detail information about an individual giving</small>
+					<span class="fw-semibold">Daily Module</span>
+					<small class="lh-1 small-text">Return daily collection items along with totals</small>
 				</div>
 			</div>
 
@@ -94,63 +94,27 @@
                         </NotAuthorized>
                     </AuthorizeView> *@
 
-					<div class="row">
-						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Collection Date From</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.From"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.From)" />
-						</div>
-
-						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Collection Date To</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.To"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.To)" />
-						</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Collection Date From</label>
+						<InputDate class="form-control"
+								   @bind-Value="parameter.TransactionDateFrom"
+								   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+						<ValidationMessage For="@(() => parameter.TransactionDateFrom)" />
 					</div>
 
 
-					<div class="row">
-						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">First Name</label>
-							<InputText class="form-control"
-									   @bind-Value="parameter.Firstname"
-									   placeholder="Enter First Name" />
-							<ValidationMessage For="@(() => parameter.Firstname)" />
-						</div>
-
-						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Last Name</label>
-							<InputText class="form-control"
-									   @bind-Value="parameter.Lastname"
-									   placeholder="Enter Last Name" />
-							<ValidationMessage For="@(() => parameter.Lastname)" />
-						</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Collection No.</label>
+						<select class="form-select"
+								@bind="parameter.CollectionNumber"
+								aria-label="Small select example">
+							@foreach (var item in MemoryStoredData.GetCollectionNumber())
+							{
+								<option value="@item.flngCollectionNumberKey">@item.fstrCollectionNumberType</option>
+							}
+						</select>
 					</div>
-
-					<label class="form-label fw-semibold">Collection Type</label>
-					<InputSelect class="form-select mb-3"
-								 @bind-Value="parameter.CollectionTypeKey">
-						@foreach (var c in MemoryStoredData.GetCollectionType())
-						{
-							<option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
-						}
-					</InputSelect>
-					<ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
-
-					<label class="form-label fw-semibold">Payment Type</label>
-					<InputSelect class="form-select col-sm-9"
-								 @bind-Value="parameter.PaymentTypeKey">
-						<option value="0">Select Payment Type</option>
-						@foreach (var p in MemoryStoredData.GetPaymentType())
-						{
-							<option value="@p.flngPaymentKey">@p.fstrPaymentType</option>
-						}
-					</InputSelect>
-					<ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
+				
 				</div>
 
 			</div>
@@ -167,45 +131,31 @@
 
 				<div class="d-flex flex-column">
 					<span class="fw-semibold">Table Data</span>
-					<small class="lh-1 small-text">Show all active and inactive currencies</small>
+					<small class="lh-1 small-text">Show all entries for the day and its total</small>
 				</div>
 			</div>
 
 			<div>
-				<button class="btn btn-sm btn-secondary border-0"
-						type="button"
-						disabled="@reload"
-						@onclick="ReloadTableData">
-					@if (reload)
-					{
-						<span class="spinner-border spinner-border-sm me-2"
-							  role="status"
-							  aria-hidden="true"></span>
-						<span>Refreshing Table...</span>
-					}
-					else
-					{
-						@("Refresh")
-					}
-				</button>
+				<span></span>
 			</div>
 		</div>
 
 		<!--Auto scroll-->
 		<div id="autoScroll"></div>
 
-		<Pagination TItem="DetailReportModel"
-					Items="detailReportModels"
+		<Pagination TItem="DailyReportModel"
+					Items="dailyReportModels"
 					OnRowClick="SelectedRecords"
 					SearchPredicate="SearchRecords"
-					ColumnCount="7"
+					ColumnCount="8"
 					SumSelector="@(s => s.fcurLocalAmount)"
-					SumColumnIndex="6"
+					SumColumnIndex="7"
 					SumLabel="Total">
 
 			<HeaderTemplate>
 				<tr>
 					<th>Full Name</th>
+					<th>Collection No.</th>
 					<th>Member Status</th>
 					<th>Collection Type</th>
 					<th>Payment Type</th>
@@ -215,14 +165,15 @@
 				</tr>
 			</HeaderTemplate>
 
-			<RowTemplate Context="detailReportModels">
-				<td>@(detailReportModels.fstrFullname) </td>
-				<td>@MemoryStoredData.GetMemberStatus().FirstOrDefault(m => m.flngMemberStatusKey == @detailReportModels.flngMemberStatusKey)!.fstrMemberStatus </td>
-				<td>@MemoryStoredData.GetCollectionType().FirstOrDefault(m => m.flngCollectionTypeKey == @detailReportModels.flngCollectionTypeKey)!.fstrCollectionType </td>
-				<td>@MemoryStoredData.GetPaymentType().FirstOrDefault(m => m.flngPaymentKey == @detailReportModels.flngPaymentTypeKey)!.fstrPaymentType </td>
-				<td>@detailReportModels.fstrCurrencyKey</td>
-				<td>@detailReportModels.fcurAmount.ToString("N2")</td>
-				<td>@detailReportModels.fcurLocalAmount.ToString("N2")</td>
+			<RowTemplate Context="dailyReportModels">
+				<td>@(dailyReportModels.fstrFirstname + " " + dailyReportModels.fstrLastname) </td>
+				<td>@dailyReportModels.flngCollectionNumber</td>
+				<td>@MemoryStoredData.GetMemberStatus().FirstOrDefault(m => m.flngMemberStatusKey == @dailyReportModels.flngMemberStatusKey)!.fstrMemberStatus </td>
+				<td>@MemoryStoredData.GetCollectionType().FirstOrDefault(m => m.flngCollectionTypeKey == @dailyReportModels.flngCollectionTypeKey)!.fstrCollectionType </td>
+				<td>@MemoryStoredData.GetPaymentType().FirstOrDefault(m => m.flngPaymentKey == @dailyReportModels.flngPaymentTypeKey)!.fstrPaymentType </td>
+				<td>@dailyReportModels.fstrCurrencyKey</td>
+				<td>@dailyReportModels.fcurAmount.ToString("N2")</td>
+				<td>@dailyReportModels.fcurLocalAmount.ToString("N2")</td>
 
 			</RowTemplate>
 
@@ -233,8 +184,8 @@
 
 @code {
 
-	private DetailReportDto parameter = new();
-	private IEnumerable<DetailReportModel> detailReportModels = [];
+	private DailyReportDto parameter = new();
+	private IEnumerable<DailyReportModel> dailyReportModels = [];
 	private IEnumerable<LocationModel>? location = [];
 	private bool canUpdate = false;
 	private bool submitting = false;
@@ -267,14 +218,14 @@
 		try
 		{
 			// Ensure that dates and location is passed in
-			if (!string.IsNullOrEmpty(parameter.LocationKey) && parameter.From.HasValue && parameter.To.HasValue)
+			if (!string.IsNullOrEmpty(parameter.LocationKey) && parameter.TransactionDateFrom.HasValue)
 			{
 
 				// Call Repository
-				detailReportModels = await ReportService.DetailReport(parameter);
+				dailyReportModels = await ReportService.DailyReport(parameter);
 
 				// Check if data was returned
-				if (detailReportModels?.Any() == true)
+				if (dailyReportModels?.Any() == true)
 				{
 					await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
 				}
@@ -304,7 +255,7 @@
 		{
 			LocationKey = User.LocationKey
 		};
-		detailReportModels = [];
+		dailyReportModels = [];
 		location = [];
 		canUpdate = false;
 		submitting = false;
@@ -316,20 +267,21 @@
 		await OnLoad();
 	}
 
-	private void SelectedRecords(DetailReportModel detailReportModels)
+	private void SelectedRecords(DailyReportModel dailyReportModels)
 	{
 
 	}
 
-	private bool SearchRecords(DetailReportModel detailReportModels, string searchText)
+	private bool SearchRecords(DailyReportModel dailyReportModels, string searchText)
 	{
 		if (string.IsNullOrWhiteSpace(searchText))
 			return true;
 
-		return detailReportModels.fstrFullname!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-		|| MemoryStoredData.GetPaymentType().FirstOrDefault(p => p.flngPaymentKey == detailReportModels.flngPaymentTypeKey)!.fstrPaymentType!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-		|| MemoryStoredData.GetMemberStatus().FirstOrDefault(p => p.flngMemberStatusKey == detailReportModels.flngMemberStatusKey)!.fstrMemberStatus!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-		|| MemoryStoredData.GetCollectionType().FirstOrDefault(p => p.flngCollectionTypeKey == detailReportModels.flngCollectionTypeKey)!.fstrCollectionType!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-		|| detailReportModels.fstrCurrencyKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+		return dailyReportModels.fstrFirstname!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+		|| dailyReportModels.fstrLastname!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+		|| MemoryStoredData.GetPaymentType().FirstOrDefault(p => p.flngPaymentKey == dailyReportModels.flngPaymentTypeKey)!.fstrPaymentType!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+		|| MemoryStoredData.GetMemberStatus().FirstOrDefault(p => p.flngMemberStatusKey == dailyReportModels.flngMemberStatusKey)!.fstrMemberStatus!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+		|| MemoryStoredData.GetCollectionType().FirstOrDefault(p => p.flngCollectionTypeKey == dailyReportModels.flngCollectionTypeKey)!.fstrCollectionType!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+		|| dailyReportModels.fstrCurrencyKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase);
 	}
 }

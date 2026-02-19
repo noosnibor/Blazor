@@ -1,18 +1,18 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@* <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">PortalWeb</a>
     </div>
-</div>
+</div> *@
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+     @*    <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
-        </div>
+        </div> *@
 
         <!--Collection-->
         <div class="nav-item px-3">
@@ -54,7 +54,7 @@
 
         <!--User-->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="currency">
+            <NavLink class="nav-link" href="user">
                 <div class="d-flex align-items-center">
                     <img width="25" height="25"
                          src="/img/user.png"
@@ -66,7 +66,7 @@
 
         <!--Permission-->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="currency">
+            <NavLink class="nav-link" href="permission">
                 <div class="d-flex align-items-center">
                     <img width="25" height="25"
                          src="/img/permission.png"
@@ -81,7 +81,7 @@
             <NavLink class="nav-link" href="detailreport">
                 <div class="d-flex align-items-center">
                     <img width="25" height="25"
-                         src="/img/daily.png"
+                         src="/img/type.png"
                          class="me-2" />
                     <span class="fs-6 text-white">Detail Report</span>
                 </div>
@@ -102,7 +102,7 @@
 
         <!--End Of Day Report-->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="currency">
+            <NavLink class="nav-link" href="dailyreport">
                 <div class="d-flex align-items-center">
                     <img width="25" height="25"
                          src="/img/daily.png"

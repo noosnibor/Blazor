@@ -54,6 +54,31 @@
                         }
                     }
                 </tbody>
+                @if (SumSelector != null && SumColumnIndex.HasValue)
+                {
+                    <tfoot class="table-success">
+                        <tr class="fw-semibold">
+                            @for (int i = 0; i < ColumnCount; i++)
+                            {
+                                if (i == SumColumnIndex.Value)
+                                {
+                                    <td class="text-success">
+                                        @ColumnSum.ToString("C2")
+                                    </td>
+                                }
+                                else if (i == 0)
+                                {
+                                    <td class="text-success">@SumLabel</td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+                            }
+                        </tr>
+                    </tfoot>
+                }
+
             </table>
         </div>
 
@@ -123,6 +148,10 @@
     [Parameter] public int PageSize { get; set; } = 5;
     [Parameter] public Func<TItem, bool>? IsInactive { get; set; }
 
+    [Parameter] public Func<TItem, decimal>? SumSelector { get; set; }
+    [Parameter] public int? SumColumnIndex { get; set; }  // Zero-based index
+    [Parameter] public string SumLabel { get; set; } = "Total";
+
     /* ===================== STATE ===================== */
 
     private int CurrentPage = 1;
@@ -139,6 +168,11 @@
     }
 
     /* ===================== DATA ===================== */
+
+    private decimal ColumnSum =>
+    SumSelector == null
+        ? 0
+        : FilteredItems.Sum(SumSelector);
 
     private IEnumerable<TItem> FilteredItems =>
         string.IsNullOrWhiteSpace(SearchText) || SearchPredicate == null

@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Custom.Toast\Custom.Toast.csproj" />
+    <ProjectReference Include="..\Custom.Toast\Toast.csproj" />
     <ProjectReference Include="..\Pagination\Pagination.csproj" />
     <ProjectReference Include="..\SqlDataAccess\SqlDataAccess.csproj" />
   </ItemGroup>

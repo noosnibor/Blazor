@@ -8,6 +8,7 @@ namespace PortalWeb.Services;
 
 public interface IReportService
 {
+    Task<IReadOnlyList<DailyReportModel>> DailyReport(DailyReportDto parameters);
     Task<IReadOnlyList<DetailReportModel>> DetailReport(DetailReportDto parameters);
     Task<CollectionTypeSummary> GenerateCollectionType(SummaryReportDto parameters);
     Task<MonthlySummary> GenerateMonthlySummaryByCollectionType(SummaryReportDto parameters);
@@ -43,7 +44,7 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
         return result?.AsList() ?? [];
     }
 
-    private async Task<IEnumerable<SummaryReportModel>> SummaryReport(SummaryReportDto parameters)
+    private async Task<IReadOnlyList<SummaryReportModel>> SummaryReport(SummaryReportDto parameters)
     {
         var col = new DynamicParameters();
 
@@ -57,7 +58,7 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
         return result?.AsList() ?? [];
     }
 
-    private static IEnumerable<string> FormatMonths(DateTime? from, DateTime? to)
+    private static IReadOnlyList<string> FormatMonths(DateTime? from, DateTime? to)
     {
         return [.. Enumerable.Range(0,
             ((to!.Value.Year - from!.Value.Year) * 12) + to!.Value.Month - from!.Value.Month + 1)
@@ -321,5 +322,24 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
             Months = months,
             Data = data
         };
+    }
+
+    public async Task<IReadOnlyList<DailyReportModel>> DailyReport(DailyReportDto parameters)
+    {
+
+        // Construct a dynamic parameter container
+        var col = new DynamicParameters();
+
+        // Build parameter container
+        col.Add("@pstrLocationKey", parameters.LocationKey);
+        col.Add("@pdtmTransactionDate", parameters.TransactionDateFrom);
+        col.Add("@plngCollectionNumber", parameters.CollectionNumber);
+
+
+        var result = await sqlDataAccess.QueryAsync<DailyReportModel>("dbo.spDailyReport",
+                                                                   CommandType.StoredProcedure,
+                                                                   col);
+
+        return result?.AsList() ?? [];
     }
 }
