@@ -1,0 +1,110 @@
+﻿
+.wrapper {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    padding: 7px 50px 12px 16px;
+    border-radius: 10px;
+    font-family: inherit;
+    transition: all 0.25s ease;
+    border: 1px solid #e5e7eb;
+}
+
+
+    .wrapper:hover {
+        border-color: #c7d2fe;
+    }
+
+    .wrapper.focused {
+        border-color: #4f46e5;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+::deep .validation-message {
+    font-size: 0.85rem;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.wrapper-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 17px;
+    font-weight: 600;
+    background: transparent;
+}
+
+
+
+
+.validation-icon {
+    position: absolute;
+    right: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.wrapper label {
+    position: absolute;
+    color: #aab0b5;
+    left: 12px;
+    top: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    padding: 0 6px;
+    background: #ffffff;
+}
+
+
+.wrapper-input::-ms-reveal,
+.wrapper-input::-ms-clear {
+    display: none;
+}
+
+.wrapper-input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
+}
+
+.wrapper.focused label,
+.wrapper-input:not(:placeholder-shown) + label {
+    top: -10px;
+    font-size: 0.80rem;
+    font-weight: 400;
+    color: #696cff;
+}
+
+.right-icons {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.toggle {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    color: #aab0b5;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+    .toggle:hover {
+        color: #5b9cfd;
+    }
+
+    .toggle i {
+        font-size: 18px;
+    }

@@ -333,7 +333,7 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
         // Build parameter container
         col.Add("@pstrLocationKey", parameters.LocationKey);
         col.Add("@pdtmTransactionDate", parameters.TransactionDateFrom);
-        col.Add("@plngCollectionNumber", parameters.CollectionNumber);
+        col.Add("@plngCollectionNumber", (parameters.CollectionNumber == 0 ? null : parameters.CollectionNumber));
 
 
         var result = await sqlDataAccess.QueryAsync<DailyReportModel>("dbo.spDailyReport",

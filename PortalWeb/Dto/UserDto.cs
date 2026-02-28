@@ -5,7 +5,7 @@ namespace PortalWeb.Dto;
 
 public class UserDto
 {
-    public int flngUserKey { get; set; }
+    public Guid flngUserKey { get; set; } = Guid.NewGuid();
 
     [Required(ErrorMessage = "Username field is required")]
     public string fstrUsername { get; set; } = string.Empty;

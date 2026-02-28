@@ -1,0 +1,355 @@
+﻿@page "/permission"
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject IUserService UserService
+@inject IPermissionService PermissionService
+@inject UserSession User
+@inject IJSRuntime JS
+
+
+<!-- ========== Header ========== -->
+<div class="section-header d-flex justify-content-between align-items-center">
+
+    <div class="d-flex align-items-center">
+        <img width="50" height="50" src="/img/user.png" class="me-2" />
+
+        <div class="d-flex flex-column">
+            <span class="fw-semibold">Permission Module</span>
+            <small class="lh-1 small-text">Manage permissions that are assigned to user</small>
+        </div>
+    </div>
+
+    <div>
+        <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
+                type="submit"
+				@onclick="AddRow">
+            @if (submitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"></span>
+                <span>Saving...</span>
+            }
+            else
+            {
+                @(canUpdate ? "Delete Permission" : "Add Permission")
+            }
+        </button>
+
+        <button class="btn btn-sm btn-secondary border-0"
+                type="button"
+                @onclick="ResetProperties">
+            Discard
+        </button>
+    </div>
+</div>
+
+<table class="table table-bordered table-sm mt-3">
+	<thead class="table-light">
+		<tr>
+			<th>Roles</th>
+			<th>Permissions</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in parameter)
+		{
+			<tr>
+				<td>
+					<InputSelect class="form-control"
+								 @bind-Value="item.flngRoleKey"
+								 TValue="int?">
+						<option value="">Select role</option>
+						@foreach (var r in MemoryStoredData.GetRoles())
+						{
+							<option value="@r.flngRoleKey">@r.fstrRoleName</option>
+						}
+					</InputSelect>
+				</td>
+				<td>
+					<InputSelect class="form-control"
+								 @bind-Value="item.flngPermissionKey"
+								 TValue="int?">
+						<option value="">Select Permission</option>
+						@foreach (var r in MemoryStoredData.GetPermissions())
+						{
+							<option value="@r.flngPermissionKey">@r.fstrDescription</option>
+						}
+					</InputSelect>
+				</td>
+
+				<td class="text-center">
+					<button class="btn btn-sm btn-danger"
+							@onclick="() => RemoveRow(item)">
+						✕
+					</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<button class="btn btn-success"
+		type="button"
+		disabled="@submitting"
+		@onclick="SavePermission">
+
+	@if (submitting)
+	{
+		<span class="spinner-border spinner-border-sm me-2"
+			  role="status"
+			  aria-hidden="true"></span>
+		<span>Saving...</span>
+	}
+	else
+	{
+		<span>Save Permission</span>
+	}
+</button>
+
+@* <AuthorizeView Policy="AdminOnly" Context="authState">
+	<Authorized>
+		<button class="btn btn-success"
+				type="button"
+				disabled="@_isSubmittingLocation"
+				@onclick="SavePermission">
+
+			@if (_isSubmittingCurrency)
+			{
+				<span class="spinner-border spinner-border-sm me-2"
+					  role="status"
+					  aria-hidden="true"></span>
+				<span>Saving...</span>
+			}
+			else
+			{
+				<span>Save Permission</span>
+			}
+		</button>
+	</Authorized>
+	<NotAuthorized>
+		<button class="btn btn-success"
+				type="button"
+				disabled
+				@onclick="SavePermission">
+
+			<span>Save Permission</span>
+		</button>
+	</NotAuthorized>
+</AuthorizeView> *@
+
+<!--Model to confirm delete-->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="exampleModalLabel">Delete Permission</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Are you sure you want to delete permission?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-danger" @onclick="DeletePermission">Delete Permission</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!--Table-->
+<div class="mt-3">
+	<div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+		<div class="d-flex align-items-center">
+			<img width="50" height="50" src="/img/table.png" class="me-2" />
+
+			<div class="d-flex flex-column">
+				<span class="fw-semibold">Table Data</span>
+				<small class="lh-1 small-text">Show all active permissions</small>
+			</div>
+		</div>
+
+		<div>
+			<button class="btn btn-sm btn-secondary border-0"
+					type="button"
+					disabled="@reload"
+					@onclick="ReloadTableData">
+				@if (reload)
+				{
+					<span class="spinner-border spinner-border-sm me-2"
+						  role="status"
+						  aria-hidden="true"></span>
+					<span>Refreshing Table...</span>
+				}
+				else
+				{
+					@("Refresh")
+				}
+			</button>
+		</div>
+	</div>
+	<Pagination TItem="PermissionModel"
+				Items="permissionModels"
+				OnRowClick="SelectedPermission"
+				SearchPredicate="SearchPermission"
+				ColumnCount="2">
+
+		<HeaderTemplate>
+			<tr>
+				<th>Role Name</th>
+				<th>Permission Name</th>
+				<th></th>
+			</tr>
+		</HeaderTemplate>
+
+		<RowTemplate Context="permission">
+			<td>@MemoryStoredData.GetRoles().FirstOrDefault(r => r.flngRoleKey == @permission.flngRoleKey)!.fstrRoleName</td>
+			<td>@MemoryStoredData.GetPermissions().FirstOrDefault(p => p.flngPermissionKey == permission.flngPermissionKey)!.fstrDescription</td>
+			<td class="text-center">
+				<button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+					✕
+				</button>
+			</td>
+
+		</RowTemplate>
+
+	</Pagination>
+</div>
+
+@code {
+
+	private List<PermissionModel> parameter = [];
+	private List<PermissionModel> permissionModels = [];
+
+	private bool submitting = false;
+	private bool canUpdate = false;
+	private bool reload = false;
+
+	private int permissionKey = 0;
+	private int roleKey = 0;
+
+	protected override async Task OnInitializedAsync()
+	{
+		AddRow();
+		await LoadAllDataAsync();
+	}
+
+	private async Task LoadAllDataAsync()
+	{
+		try
+		{
+			
+			permissionModels = await PermissionService.SelectPermission() ?? [];
+			permissionModels = permissionModels.OrderBy(x => x.flngRoleKey).ToList();
+
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError(ex.Message);
+		}
+
+	}
+
+	private async Task SavePermission()
+	{
+
+		if (parameter.Any(r => r.flngPermissionKey == 0 || r.flngRoleKey == 0))
+		{
+			ToastService.ShowError("All roles and permissions are required.");
+			return;
+		}
+
+		try
+		{
+			var message = await PermissionService.CreatePermission(parameter);
+
+			ToastService.Show(message.Type, message.Message!);
+
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError(ex.Message);
+		}
+		finally
+		{
+			ResetProperties();
+			await LoadAllDataAsync();
+		}
+	}
+
+	private void SelectedPermission(PermissionModel permission)
+	{
+		permissionKey = (int)permission.flngPermissionKey!;
+		roleKey = (int)permission.flngRoleKey!;
+	}
+
+	private async Task DeletePermission()
+	{
+		try
+		{
+			var message = await PermissionService.DeletePermission(permissionKey, roleKey);
+			await JS.InvokeVoidAsync("closeModal", "exampleModal");
+
+			ToastService.Show(message.Type, message.Message!);
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError(ex.Message);
+		}
+		finally
+		{
+			ResetProperties();
+			await LoadAllDataAsync();
+		}
+	}
+
+	private bool SearchPermission(PermissionModel permission, string searchText)
+	{
+		if (string.IsNullOrWhiteSpace(searchText))
+			return true;
+
+		return
+		MemoryStoredData.GetRoles()
+		.FirstOrDefault(x => x.flngRoleKey == permission.flngRoleKey)!
+		.fstrRoleName!
+		.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+		MemoryStoredData.GetPermissions()
+		.FirstOrDefault(x => x.flngPermissionKey == permission.flngPermissionKey)!
+		.fstrDescription!
+		.Contains(searchText, StringComparison.OrdinalIgnoreCase); ;
+	}
+
+	private void ResetProperties()
+	{
+		parameter = [];
+		permissionModels = [];
+		AddRow();
+		submitting = false;
+		canUpdate = false;
+		reload = false;
+
+		permissionKey = 0;
+		roleKey = 0;
+	}
+
+	private async Task ReloadTableData()
+	{
+		await LoadAllDataAsync();
+	}
+
+	private void AddRow()
+	{
+		parameter.Add(new PermissionModel());
+	}
+
+	private void RemoveRow(PermissionModel item)
+	{
+		parameter.Remove(item);
+	}
+
+}

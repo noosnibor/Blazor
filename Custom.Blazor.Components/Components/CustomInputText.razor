@@ -1,0 +1,88 @@
+﻿@inherits InputBase<string>
+
+<div class="wrapper @(IsFocus ? "focused" : "")">
+
+    <input class="wrapper-input"
+           type="@InputType"
+           placeholder=" "
+           @bind="CurrentValue"
+           @bind:event="oninput"
+           @onfocus="() => IsFocus = true"
+           @onblur="HandleBlur" />
+
+    <label>@Placeholder</label>
+
+    <div class="right-icons">
+
+        @if (ShowValidationIcon)
+        {
+            <span class="validation-icon">
+                <i class="@ValidationIcon"></i>
+            </span>
+        }
+
+        @if (IsPassword)
+        {
+            <button type="button"
+                    class="toggle"
+                    @onclick="TogglePassword">
+                <i class="@IconClass"></i>
+            </button>
+        }
+
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Placeholder { get; set; } = "Enter a field value";
+    [Parameter]
+    public string? Type { get; set; } = "text";
+
+    private bool IsFocus = false;
+    private bool CanShowPassword = false;
+
+    private bool IsPassword => Type?.ToLower() == "password";
+    private string? InputType => IsPassword ? (CanShowPassword ? "text" : "password") : Type;
+    private string IconClass => CanShowPassword ? "bi bi-eye-slash" : "bi bi-eye";
+
+    private void TogglePassword() => CanShowPassword = !CanShowPassword;
+
+    private void HandleBlur(FocusEventArgs e)
+    {
+        IsFocus = false;
+        EditContext?.NotifyFieldChanged(FieldIdentifier);
+    }
+
+    private bool HasError =>
+     EditContext?.GetValidationMessages(FieldIdentifier).Any() == true;
+
+    private bool HasValidationState =>
+        EditContext?.GetValidationMessages(FieldIdentifier).Any() == true ||
+        EditContext?.IsModified(FieldIdentifier) == true;
+
+    private bool IsValid =>
+        !HasError &&
+        !string.IsNullOrWhiteSpace(CurrentValue);
+
+
+    private bool ShowValidationIcon =>
+        HasValidationState;
+
+    private string CssClass =>
+        HasError ? "invalid" :
+        IsValid && HasValidationState ? "valid" :
+        "";
+
+    private string ValidationIcon =>
+        HasError
+            ? "bi bi-exclamation-circle-fill text-danger"
+            : "bi bi-check-circle-fill text-success";
+
+    protected override bool TryParseValueFromString(string? value, out string result, out string validationErrorMessage)
+    {
+        result = value ?? "";
+        validationErrorMessage = "";
+        return true;
+    }
+}

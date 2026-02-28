@@ -5,7 +5,7 @@
 @inject ToastService ToastService
 @inject ILocationService LocationService
 @inject ICurrencyService CurrencyService
-@inject ICollectionService CollectionService
+@inject IUserService UserService
 @inject UserSession User
 @inject IJSRuntime JS
 
@@ -25,7 +25,7 @@
                 <img width="50" height="50" src="/img/user.png" class="me-2" />
 
                 <div class="d-flex flex-column">
-                    <span class="fw-semibold">Collection Module</span>
+                    <span class="fw-semibold">User Module</span>
                     <small class="lh-1 small-text">Manage how payments are collected</small>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     }
                     else
                     {
-                        @(canUpdate ? "Update Collection" : "Add Collection")
+                        @(canUpdate ? "Update User" : "Add User")
                     }
                 </button>
 
@@ -212,6 +212,76 @@
         </div>
 
     </EditForm>
+
+    <!--Table-->
+    <div class="mt-3">
+        <div class="section-header d-flex justify-content-between align-items-center mt-5">
+
+            <div class="d-flex align-items-center">
+                <img width="50" height="50" src="/img/table.png" class="me-2" />
+
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">Table Data</span>
+                    <small class="lh-1 small-text">Show all active and inactive currencies</small>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-sm btn-secondary border-0"
+                        type="button"
+                        disabled="@reload"
+                        @onclick="ReloadTableData">
+                    @if (reload)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"></span>
+                        <span>Refreshing Table...</span>
+                    }
+                    else
+                    {
+                        @("Refresh")
+                    }
+                </button>
+            </div>
+        </div>
+        <Pagination TItem="UserModel"
+                    Items="userModel"
+                    OnRowClick="SelectedUser"
+                    SearchPredicate="SearchUser"
+                    ColumnCount="7" >
+
+            <HeaderTemplate>
+                <tr>
+                    <th>Full Name </th>
+                    <th>Email Address</th>
+                    <th>Location</th>
+                    <th>Role</th>
+                    <th>Active</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                </tr>
+            </HeaderTemplate>
+
+            <RowTemplate Context="user">
+                <td>
+                    @user.fstrFirstname @user.fstrLastname
+                </td>
+
+                <td><span class="text-muted">@user.fstrEmailAddress</span></td>
+
+                <td>@user.fstrLocationKey</td>
+                <td><span class="text-muted">@MemoryStoredData.GetRoles().FirstOrDefault(x => x.flngRoleKey == user.flngRoleKey)!.fstrRoleName</span></td>
+                <td>
+                    <span class="badge @(user.fblnActive ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")  fs-12 p-1">@(user.fblnActive ? "Active" : "Not Active")</span>
+                </td>
+                <td><span class="text-muted">@user.fdtmStart.ToString("MMM dd, yyyy")</span></td>
+                <td><span class="text-muted">@user.fdtmEnd.ToString("MMM dd, yyyy")</span></td>
+
+            </RowTemplate>
+
+        </Pagination>
+    </div>
 </div>
 
 @code {
@@ -219,6 +289,7 @@
     private UserDto parameter = new();
     private IEnumerable<LocationModel> locationModel = [];
     private IEnumerable<CurrencyModel> currencyModel = [];
+    private IEnumerable<UserModel> userModel = [];
     private bool submitting = false;
     private bool canUpdate = false;
     private bool reload = false;
@@ -236,6 +307,7 @@
         {
             currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
             locationModel = await LocationService.SelectLocation(null, true) ?? [];
+            userModel = await UserService.SelectUser(null, null, null);
         }
         catch (Exception ex)
         {
@@ -264,13 +336,83 @@
 
     }
 
+    private async Task SelectedUser(UserModel user)
+    {
+        canUpdate = true;
+        parameter = new()
+        {
+            flngUserKey = user.flngUserKey!,
+            fstrUsername = user.fstrUsername!,
+            fstrFirstname = user!.fstrFirstname!,
+            fstrLastname = user.fstrLastname!,
+            fstrEmailAddress = user.fstrEmailAddress!,
+            fstrLocationKey = user.fstrLocationKey!,
+            flngRoleKey = user.flngRoleKey,
+            fblnActive = user.fblnActive,
+            fdtmStart = user.fdtmStart,
+            fdtmEnd = user.fdtmEnd,
+            fstrPassword = user.fstrPassword!
+        };
+
+        currencyModel = await CurrencyService.SelectCurrency(null, user.fstrLocationKey!, true) ?? [];
+        parameter.fstrCurrencyKey = currencyModel.FirstOrDefault(x => x.fcurAmount == 1)?.fstrCurrencyKey;
+
+        await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
+    }
+
+    private bool SearchUser(UserModel user, string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        return user.fstrUsername!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        user.fstrFirstname!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        user.fstrLastname!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        user.fstrEmailAddress!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        user.fstrLocationKey!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+        MemoryStoredData.GetRoles()
+        .FirstOrDefault(x => x.flngRoleKey == user.flngRoleKey)!
+        .fstrRoleName!
+        .Contains(searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task OnFormSubmit()
     {
+        submitting = true;
+        await Task.Delay(1000);
 
+        try
+        {
+            if (parameter.fstrUsername == "")
+                return;
+
+
+            var message = await (canUpdate ? UserService.AddOrUpdateUser(parameter, false) : UserService.AddOrUpdateUser(parameter));
+
+            ToastService.Show(message.Type, message.Message!);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            await ResetProperties();
+        }
     }
 
     private async Task ResetProperties()
     {
-        
+        parameter = new();
+        locationModel = [];
+        submitting = false;
+        canUpdate = false;
+
+        await LoadAllDataAsync();
+    }
+
+    private async Task ReloadTableData()
+    {
+        await LoadAllDataAsync();
     }
 }

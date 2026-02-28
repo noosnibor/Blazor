@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[tblUser]
 (
-	[flngUserKey] INT IDENTITY(1,1) NOT NULL,
+	[flngUserKey] UNIQUEIDENTIFIER NOT NULL,
     [flngVer] INT NOT NULL, 
     [fstrUsername] NVARCHAR(50) NOT NULL, 
     [fstrPassword] NVARCHAR(500) NOT NULL, 
@@ -16,9 +16,9 @@
     [fdtmEnd] DATETIME2(0) NOT NULL,
     [fstrWho] NVARCHAR(50) NOT NULL, 
     [fdtmWhen] DATETIME NOT NULL,
-    CONSTRAINT PK_tblUser PRIMARY KEY CLUSTERED ([flngUserKey], [flngVer]),
+    CONSTRAINT PK_tblUser PRIMARY KEY CLUSTERED ([flngUserKey], [flngVer])
 
-    CONSTRAINT UQ_tblUser_Username UNIQUE ([fstrUsername], [fstrLocationKey], [fblnActive]),
+
 )
 
 GO

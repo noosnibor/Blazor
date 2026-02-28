@@ -432,6 +432,8 @@
     {
         try
         {
+            selectedCollectionNumber = 1;
+
             await LoadCurrency();
 
             locationModel = await LocationService.SelectLocation(null, true) ?? [];

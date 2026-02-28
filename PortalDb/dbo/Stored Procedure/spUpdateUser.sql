@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spUpdateUser]
-	@plngUserKey INT,
+	@plngUserKey UNIQUEIDENTIFIER,
 	@pstrUsername NVARCHAR(50), 
     @pstrPassword NVARCHAR(255),  
     @pstrFirstname NVARCHAR(50), 
@@ -17,10 +17,9 @@
 AS
 BEGIN
     DECLARE @MaxVer INT;
-    SET @MaxVer = (SELECT MAX(flngVer) FROM tblUser WHERE flngUserKey = @plngUserKey) + 1;
+    SET @MaxVer = ISNULL((SELECT MAX(flngVer) FROM tblUser WHERE flngUserKey = @plngUserKey), 0) + 1;
 
-     INSERT INTO tblUser(
-                        flngUserKey,
+     INSERT INTO tblUser(flngUserKey,
                         flngVer,
                         fstrUsername, 
                         fstrPassword,

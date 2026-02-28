@@ -1,24 +1,45 @@
 ﻿@inherits LayoutComponentBase
 
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+@inject UserSession User
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <ToastContainer />
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+        
+        <div class="top-row align-items-center px-4">
 
+            <div class="col-md-6">
+                <h5 class="mb-0 fw-light">
+                    Hey! <span class="fw-bold">@User.FullName</span>
+                </h5>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
+                    <a href="#" @onclick="Logout" @onclick:preventDefault>Logout</a>
+                </div>
+            </div>
+
+        </div>
+        <ToastContainer />
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code {
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/", replace: true);
+    }
+}
+
+

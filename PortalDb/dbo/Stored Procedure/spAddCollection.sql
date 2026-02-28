@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spAddCollection]
-    @plngCollectionKey      INT,
+    @plngCollectionKey      UNIQUEIDENTIFIER,
 	@pstrFirstname          VARCHAR(50),
 	@pstrLastname           VARCHAR(50),
 	@pstrEmailAddress       VARCHAR(50),
@@ -19,7 +19,7 @@ AS
 BEGIN
 
     INSERT INTO dbo.tblCollection
-    (
+    ( flngCollectionKey,
         flngver,
         fstrFirstname,
         fstrLastname,
@@ -38,7 +38,7 @@ BEGIN
         fdtmWhen
     )
     VALUES
-    (
+    ( @plngCollectionKey,
         0,
         @pstrFirstname,
         @pstrLastname,

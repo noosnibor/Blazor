@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[tblCollection]
 (
-	flngCollectionKey      INT IDENTITY(1,1) NOT NULL,
+	flngCollectionKey      UNIQUEIDENTIFIER NOT NULL,
     flngVer                INT NOT NULL,
     fstrFirstname          VARCHAR(50) NOT NULL,
     fstrLastname           VARCHAR(50) NOT NULL,

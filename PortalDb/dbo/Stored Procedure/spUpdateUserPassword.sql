@@ -1,11 +1,13 @@
 ﻿CREATE PROCEDURE [dbo].[spUpdateUserPassword]
-	@plngUserKey	INT,
-	@pstrPassword	NVARCHAR(255)
+	@pstrUsername NVARCHAR(50),
+    @pstrPassword NVARCHAR(255),
+    @pblnPasswordChanged BIT
 AS
 BEGIN	
 	UPDATE tblUser SET
 	fstrPassword		= @pstrPassword,
 	fblnPasswordChanged = 1
-	WHERE flngUserKey	= @plngUserKey
+	WHERE fstrUsername	= @pstrUsername
 	AND flngVer			= 0
 END
+

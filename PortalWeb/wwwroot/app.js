@@ -5,3 +5,10 @@ window.scrollToElement = (id) => {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
+
+window.closeModal = (id) => {
+    const modal = bootstrap.Modal.getInstance(
+        document.getElementById(id)
+    );
+    modal?.hide();
+};

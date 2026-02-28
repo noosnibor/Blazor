@@ -2,7 +2,7 @@
 
 public class CollectionModel
 {
-    public int          flngCollectionKey       { get; set; }
+    public Guid         flngCollectionKey       { get; set; }
     public string?      fstrFirstname           { get; set; }
     public string?      fstrLastname            { get; set; }
     public string?      fstrEmailAddress        { get; set; }

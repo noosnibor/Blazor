@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [dbo].[spSelectPermission]
-	@plngPermissionKey  INT,
-	@plngRoleKey        INT
+	@plngPermissionKey  INT = NULL,
+	@plngRoleKey        INT = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;

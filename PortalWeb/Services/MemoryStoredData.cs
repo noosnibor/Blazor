@@ -66,17 +66,14 @@ public static class MemoryStoredData
                 new () {flngPermissionKey = 2, fstrPermission = "Collection.View", fstrDescription = "Collection View"},
                 new () {flngPermissionKey = 3, fstrPermission = "Collection.Edit", fstrDescription = "Collection Edit"},
                 new () {flngPermissionKey = 4, fstrPermission = "Collection.Add", fstrDescription = "Collection Add"},
-                new () {flngPermissionKey = 5, fstrPermission = "CollectionBreakdown.Add", fstrDescription = "CollectionBreakdown Add"},
-                new () {flngPermissionKey = 6, fstrPermission = "CollectionBreakdown.Delete", fstrDescription = "CollectionBreakdown Delete"},
 
                 // Report
                 new () {flngPermissionKey = 7, fstrPermission = "Report.View", fstrDescription = "Report View"},
                 new () {flngPermissionKey = 8, fstrPermission = "Report.Generate", fstrDescription = "Report Generate"},
 
                 // Setting
-                new () {flngPermissionKey = 9, fstrPermission = "AdminOnly", fstrDescription = "Admin Only"},
-                new () {flngPermissionKey = 10, fstrPermission = "Approver", fstrDescription = "Can Approver"},
-                new () {flngPermissionKey = 11, fstrPermission = "CheckOff", fstrDescription = "Check Off"}
+                new () {flngPermissionKey = 9, fstrPermission = "AdminOnly", fstrDescription = "Admin Only"}
+         
             ];
     }
 

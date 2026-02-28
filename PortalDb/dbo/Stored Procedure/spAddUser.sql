@@ -1,4 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spAddUser]
+    @plngUserKey        UNIQUEIDENTIFIER,
 	@pstrUsername       NVARCHAR(50), 
     @pstrPassword       NVARCHAR(255),  
     @pstrFirstname      NVARCHAR(50), 
@@ -8,13 +9,14 @@
     @plngRoleKey        INT,
     @pstrCurrencyKey    NVARCHAR(10),
     @pblnActive         BIT,
+    @pblnPasswordChanged BIT,
     @pdtmStart          DATETIME2(0),
     @pdtmEnd            DATETIME2(0),
     @pstrWho            NVARCHAR(50), 
     @pdtmWhen           DATETIME2(0)
 AS
 BEGIN
-    INSERT INTO tblUser(
+    INSERT INTO tblUser(flngUserKey,
                         flngVer,
                         fstrUsername, 
                         fstrPassword,
@@ -30,7 +32,8 @@ BEGIN
                         fdtmEnd, 
                         fstrWho, 
                         fdtmWhen)
-    VALUES (0, 
+    VALUES (@plngUserKey,
+            0, 
             @pstrUsername, 
             @pstrPassword, 
             @pstrFirstname, 

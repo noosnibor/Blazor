@@ -2,7 +2,20 @@
 
 namespace Custom.Toast.Services;
 
-public class ToastService
+public interface IToastService
+{
+    event Action? OnClear;
+    event Action<ToastMessage>? OnShow;
+
+    void Clear();
+    void Show(ToastType type, string message);
+    void ShowError(string message);
+    void ShowInfo(string message);
+    void ShowSuccess(string message);
+    void ShowWarning(string message);
+}
+
+public class ToastService : IToastService
 {
     public event Action<ToastMessage>? OnShow;
     public event Action? OnClear;

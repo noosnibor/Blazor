@@ -1,7 +1,39 @@
-﻿
-@inject AuthenticationStateProvider StateProvider
-@inject NavigationManager Navigation
+﻿@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+@if (IsAuthenticated)
+{
+    <div class="text-center p-5">
+        <h4>Access Denied</h4>
+        <img class="d-block mx-auto"
+             src="https://img.icons8.com/3d-fluency/94/denied-1.png"
+             style="max-width:120px;" />
+        <p>You don’t have permission to view this page.</p>
+    </div>
+}
 
 @code {
+    private bool IsAuthenticated;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authProvider = AuthStateProvider as CustomAuthStateProvider;
+        if (authProvider is null)
+        {
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        IsAuthenticated = user.Identity?.IsAuthenticated == true;
+
+        if (!IsAuthenticated)
+        {
+            Nav.NavigateTo("/", replace: true);
+        }
+    }
 }
+
+

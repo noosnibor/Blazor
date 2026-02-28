@@ -4,7 +4,7 @@ namespace PortalWeb.Dto;
 
 public class CollectionDto
 {
-    public int          CollectionKey       { get; set; } = 0;
+    public Guid          CollectionKey       { get; set; } = Guid.NewGuid();
     [Required(ErrorMessage = "A first name is required")]
     public string?      Firstname           { get; set; }
     [Required(ErrorMessage = "A surname is required")]

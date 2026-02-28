@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[spUpdateCollection]
-	@plngCollectionKey INT,
+	@plngCollectionKey UNIQUEIDENTIFIER,
 	@pstrFirstname VARCHAR(50),
 	@pstrLastname VARCHAR(50),
 	@pstrEmailAddress VARCHAR(50),
@@ -20,7 +20,7 @@ BEGIN
     SET @MaxVer = ISNULL((SELECT MAX(flngVer) FROM tblCollection WHERE flngCollectionKey = @plngCollectionKey), 0) + 1;
 
      INSERT INTO dbo.tblCollection
-    (
+    ( flngCollectionKey,
         flngver,
         fstrFirstname,
         fstrLastname,
@@ -38,7 +38,7 @@ BEGIN
         fstrWho,
         fdtmWhen
     )
-    SELECT
+    SELECT flngCollectionKey,
         @MaxVer,
         fstrFirstname,
         fstrLastname,
