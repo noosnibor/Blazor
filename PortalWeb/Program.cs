@@ -3,10 +3,11 @@ using Custom.Toast.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.Data.SqlClient;
 using PortalWeb.Components;
 using PortalWeb.Models;
 using PortalWeb.Services;
-using SqlDataAccess;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,20 +15,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-//builder.Services.AddRazorPages();
-//builder.Services.AddServerSideBlazor()
-//    .AddCircuitOptions(options =>
-//    {
-//        options.DetailedErrors = true;
-//    });
+builder.Environment.IsDevelopment();
+builder.Environment.IsProduction();
 
 //Connection String
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+//builder.Services.AddScoped<IDbConnection>(sp =>
+//{
+//    var configuration = sp.GetRequiredService<IConfiguration>();
+//    var connectionString = configuration.GetConnectionString("DefaultConnection");
+//    return new SqlConnection(connectionString);
+//});
 
 // Dependency Injection
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
-builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess.SqlDataAccess>();
+builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
@@ -37,7 +39,7 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-builder.Services.AddScoped<IToastService, ToastService>();
+builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<LoginModel>();
 
@@ -90,7 +92,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseStaticFiles();
 
 app.UseAntiforgery();
 

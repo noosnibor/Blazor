@@ -31,60 +31,78 @@ public class AuthService(IUserService user,
 
     public async Task<(bool, string)> LoginAsync(LoginDto model)
     {
-        // Get user by username
-        var user = await this.user.SelectUserFirstOrDefault(model.Username!, null);
-
-        // Can't find username
-        if (user?.fstrUsername is null)
-            return (false, "Username does not exists in the system / account is not active");
-
-        // Check if the account has expired
-        if (user.fdtmEnd < DateTime.Now)
-            return (false, "Your account has expired");
-
-        // Check for default password
-        if (model.Password! == MemoryStoredData.DefaultPassword && user.fblnPasswordChanged == false)
+        try
         {
-            return (false, "Change Password");
+            if (string.IsNullOrWhiteSpace(model.Username))
+                return (false, "Username is required");
+
+            if (string.IsNullOrWhiteSpace(model.Password))
+                return (false, "Password is required");
+
+            var user = await this.user.SelectUserFirstOrDefault(model.Username, null);
+
+            if (user == null || string.IsNullOrWhiteSpace(user.fstrUsername))
+                return (false, "Username does not exist in the system / account is not active");
+
+            if (user.fdtmEnd < DateTime.Now)
+                return (false, "Your account has expired");
+
+            if (string.IsNullOrWhiteSpace(user.fstrPassword))
+                return (false, "User password is not configured. Please contact administrator.");
+
+            if (model.Password == MemoryStoredData.DefaultPassword && user.fblnPasswordChanged == false)
+                return (false, "Change Password");
+
+            //if (model.Password != MemoryStoredData.DefaultPassword)
+            //    return (false, "Password invalid");
+
+            var passwordValid = BCrypt.Net.BCrypt.Verify(model.Password, user.fstrPassword);
+
+            if (!passwordValid)
+                return (false, $"The password is incorrect for user {user.fstrUsername}");
+
+            var permissions = await permission
+                .SelectPermissionByUsername(user.fstrUsername, user.fstrLocationKey!);
+
+            var currency = await this.currency
+                .SelectCurrencyFirstOrDefault(user.fstrCurrencyKey!);
+
+            if (currency == null)
+                return (false, "Currency configuration missing.");
+
+            var location = await this.location
+                .SelectLocationFirstOrDefault(user.fstrLocationKey!);
+
+            if (location == null)
+                return (false, "Location configuration missing.");
+
+            var token = _jwt.GenerateToken(
+                user,
+                currency.fstrCurrencyType!,
+                location.fstrLocationAddress!,
+                permissions
+            );
+
+            await _storage.SetAsync("authToken", token);
+            await _auth.SignInAsync(token);
+
+            _session.FullName = user.fstrFirstname + " " + user.fstrLastname;
+            _session.Username = user.fstrUsername;
+            _session.Role = MemoryStoredData.GetRoles()
+                .FirstOrDefault(r => r.flngRoleKey == user.flngRoleKey)?.fstrRoleName;
+
+            _session.LocationKey = user.fstrLocationKey;
+            _session.CurrenyKey = user.fstrCurrencyKey;
+            _session.Address = location.fstrLocationAddress;
+            _session.CurrencyType = currency.fstrCurrencyType;
+            _session.IsAuthenticated = true;
+
+            return (true, "Successfully logged in!");
         }
-
-        if (!BCrypt.Net.BCrypt.Verify(model.Password!, user.fstrPassword))
-            return (false, $"The password is incorrect for user {user.fstrUsername}");
-
-        // Get user permissions
-        var permissions = await permission.SelectPermissionByUsername(user.fstrUsername!, user.fstrLocationKey!);
-
-        var currency = await this.currency.SelectCurrencyFirstOrDefault(user.fstrCurrencyKey!);
-        var r = currency?.fstrCurrencyType;
-
-        // Get location address
-        var location = await this.location.SelectLocationFirstOrDefault(user.fstrLocationKey!);
-
-        // Generate token
-        var token = _jwt.GenerateToken(user, r!, location!.fstrLocationAddress!, permissions);
-
-        await _storage.SetAsync("authToken", token);
-
-        // Notify user state
-        await _auth.SignInAsync(token);
-
-        _session.FullName = user.fstrFirstname + " " + user.fstrLastname;
-
-        _session.Username = user.fstrUsername;
-
-        _session.Role = MemoryStoredData.GetRoles().FirstOrDefault(r => r.flngRoleKey == user.flngRoleKey)!.fstrRoleName;
-
-        _session.LocationKey = user.fstrLocationKey;
-
-        _session.CurrenyKey = user.fstrCurrencyKey;
-
-        _session.Address = location.fstrLocationAddress;
-
-        _session.CurrencyType = r;
-
-        _session.IsAuthenticated = true;
-
-        return (true, "Successfully logged in!");
+        catch (Exception ex)
+        {
+            return (true, ex.Message);
+        }
     }
 
     public async Task LogoutAsync()

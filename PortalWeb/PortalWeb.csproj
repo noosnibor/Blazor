@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
   </ItemGroup>
 
@@ -15,7 +16,6 @@
     <ProjectReference Include="..\Custom.Blazor.Components\CustomComponents.csproj" />
     <ProjectReference Include="..\Custom.Toast\Toast.csproj" />
     <ProjectReference Include="..\Pagination\Pagination.csproj" />
-    <ProjectReference Include="..\SqlDataAccess\SqlDataAccess.csproj" />
   </ItemGroup>
 
 </Project>
