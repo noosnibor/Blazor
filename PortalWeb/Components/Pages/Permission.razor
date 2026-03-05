@@ -8,6 +8,7 @@
 @inject UserSession User
 @inject IJSRuntime JS
 
+@attribute [Authorize(Policy = "AdminOnly")]
 
 <!-- ========== Header ========== -->
 <div class="section-header d-flex justify-content-between align-items-center">

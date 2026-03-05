@@ -7,6 +7,7 @@ using Microsoft.Data.SqlClient;
 using PortalWeb.Components;
 using PortalWeb.Models;
 using PortalWeb.Services;
+using SqlDataAccess;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,7 +30,7 @@ builder.Environment.IsProduction();
 // Dependency Injection
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
-builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
+builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess.SqlDataAccess>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();

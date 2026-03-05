@@ -6,6 +6,8 @@
 @inject ILocationService LocationService
 @inject IJSRuntime JS
 
+@attribute [Authorize(Policy = "AdminOnly")]
+
 <!--Auto scroll-->
 <div id="autoScroll"></div>
 

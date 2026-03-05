@@ -9,6 +9,8 @@
 @inject UserSession User
 @inject IJSRuntime JS
 
+@attribute [Authorize(Policy = "Collection.View")]
+
 <!--Auto scroll-->
 <div id="autoScroll"></div>
 
@@ -31,27 +33,31 @@
             </div>
 
             <div>
-                <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
-                        type="submit"
-                        disabled="@submitting">
-                    @if (submitting)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"></span>
-                        <span>Saving...</span>
-                    }
-                    else
-                    {
-                        @(canUpdate ? "Update Collection" : "Add Collection")
-                    }
-                </button>
+                <AuthorizeView Policy="Collection.AddOrUpdate" Context="authState">
+		            <Authorized>
+                    <button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
+                            type="submit"
+                            disabled="@submitting">
+                        @if (submitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                  aria-hidden="true"></span>
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            @(canUpdate ? "Update Collection" : "Add Collection")
+                        }
+                    </button>
 
-                <button class="btn btn-sm btn-secondary border-0"
-                        type="button"
-                        @onclick="ResetProperties">
-                    Discard
-                </button>
+                    <button class="btn btn-sm btn-secondary border-0"
+                            type="button"
+                            @onclick="ResetProperties">
+                        Discard
+                    </button>
+                    </Authorized>
+                </AuthorizeView>
             </div>
         </div>
 

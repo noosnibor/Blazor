@@ -25,123 +25,148 @@ public interface ISqlDataAccess
 
 public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
 {
-    private readonly IConfiguration dbConfiguration = configuration;
-    private IDbConnection? dbConnection = null;
-    private IDbTransaction? dbTransaction = null;
-
+    private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("DefaultConnection is missing.");
 
     private SqlConnection CreateConnection()
-    {
-        var connectionString = dbConfiguration.GetConnectionString("DefaultConnection");
-        return new SqlConnection(connectionString);
-    }
+        => new(_connectionString);
 
-    private void EnsureConnectionOpen()
-    {
-        dbConnection = CreateConnection();
-        dbConnection.Open();
-    }
+    // ------------------------------
+    // TRANSACTION MANAGEMENT
+    // ------------------------------
 
     public IDbTransaction BeginTransaction()
     {
-        EnsureConnectionOpen();
-        dbTransaction = dbConnection?.BeginTransaction();
-        return dbTransaction!;
+        var connection = CreateConnection();
+        connection.Open();
+        return connection.BeginTransaction();
     }
 
     public void CommitTransaction(IDbTransaction? dbTransactions = null)
     {
-        var transaction = dbTransactions ?? dbTransaction;
-        transaction?.Commit();
-        transaction?.Connection?.Close();
-        transaction?.Dispose();
+        if (dbTransactions == null) return;
+
+        dbTransactions.Commit();
+        dbTransactions.Connection?.Close();
+        dbTransactions.Dispose();
     }
 
     public void RollbackTransaction(IDbTransaction? dbTransactions = null)
     {
-        var transaction = dbTransactions ?? dbTransaction;
-        transaction?.Rollback();
-        transaction?.Dispose();
+        if (dbTransactions == null) return;
+
+        dbTransactions.Rollback();
+        dbTransactions.Connection?.Close();
+        dbTransactions.Dispose();
     }
 
     public void Dispose(IDbTransaction? dbTransactions = null)
     {
-        var transaction = dbTransactions ?? dbTransaction;
-        transaction?.Dispose();
-        // DO NOT dispose dbConnection because DI controls it
+        if (dbTransactions == null) return;
+
+        dbTransactions.Connection?.Close();
+        dbTransactions.Dispose();
     }
 
-    public async Task<int> ExecuteAsync<P>(string sql, CommandType command, P parameter)
+    // ------------------------------
+    // EXECUTE (AUTO TRANSACTION)
+    // ------------------------------
+
+    public async Task<int> ExecuteAsync<P>(
+        string sql,
+        CommandType command,
+        P parameter)
     {
-        EnsureConnectionOpen();
-        using var transaction = dbConnection.BeginTransaction();
+        await using var connection = CreateConnection();
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
 
         try
         {
-            var response = await dbConnection.ExecuteAsync(
+            var result = await connection.ExecuteAsync(
                 sql,
                 parameter,
                 transaction,
                 commandType: command
             );
 
-            transaction.Commit();
-            return response;
+            await transaction.CommitAsync();
+            return result;
         }
         catch
         {
-            transaction.Rollback();
-            throw; // Let real errors bubble up
-        }
-    }
-
-    public async Task<int> ExecuteAsync<P>(string sql, CommandType command, P parameter, IDbTransaction dbTransactions)
-    {
-        EnsureConnectionOpen();
-
-        return await dbConnection.ExecuteAsync(
-            sql,
-            parameter,
-            dbTransactions,
-            commandType: command
-        );
-    }
-
-    public async Task<T> ExecuteScalarAsync<T, P>(string sql, CommandType command, P parameter)
-    {
-        EnsureConnectionOpen();
-        using var transaction = dbConnection.BeginTransaction();
-
-        try
-        {
-            var response = await dbConnection.ExecuteScalarAsync<T>(
-                sql,
-                parameter,
-                transaction,
-                commandType: command
-            );
-
-            transaction.Commit();
-            return response!;
-        }
-        catch
-        {
-            transaction.Rollback();
+            await transaction.RollbackAsync();
             throw;
         }
     }
 
-    public async Task<T> ExecuteScalarAsync<T, P>(string sql, CommandType command, P parameter, IDbTransaction dbTransactions)
+    public async Task<int> ExecuteAsync<P>(
+        string sql,
+        CommandType command,
+        P parameter,
+        IDbTransaction dbTransactions)
     {
-        EnsureConnectionOpen();
-
-        return (await dbConnection.ExecuteScalarAsync<T>(
+        return await dbTransactions.Connection!.ExecuteAsync(
             sql,
             parameter,
             dbTransactions,
             commandType: command
-        ))!;
+        );
     }
+
+    // ------------------------------
+    // SCALAR
+    // ------------------------------
+
+    public async Task<T> ExecuteScalarAsync<T, P>(
+        string sql,
+        CommandType command,
+        P parameter)
+    {
+        await using var connection = CreateConnection();
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        try
+        {
+            var result = await connection.ExecuteScalarAsync<T>(
+                sql,
+                parameter,
+                transaction,
+                commandType: command
+            );
+
+            await transaction.CommitAsync();
+            return result!;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<T> ExecuteScalarAsync<T, P>(
+        string sql,
+        CommandType command,
+        P parameter,
+        IDbTransaction dbTransactions)
+    {
+        var result = await dbTransactions.Connection!.ExecuteScalarAsync<T>(
+            sql,
+            parameter,
+            dbTransactions,
+            commandType: command
+        );
+
+        return result!;
+    }
+
+    // ------------------------------
+    // QUERY
+    // ------------------------------
 
     public async Task<IEnumerable<T>> QueryAsync<T>(
         string sql,
@@ -149,7 +174,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
         object? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        EnsureConnectionOpen();
+        await using var connection = CreateConnection();
 
         var command = new CommandDefinition(
             sql,
@@ -158,7 +183,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
             cancellationToken: cancellationToken
         );
 
-        return await dbConnection.QueryAsync<T>(command);
+        return await connection.QueryAsync<T>(command);
     }
 
     public async Task<IEnumerable<T>> QueryAsync<T>(
@@ -168,8 +193,6 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
         object? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        EnsureConnectionOpen();
-
         var command = new CommandDefinition(
             sql,
             parameters,
@@ -178,7 +201,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
             cancellationToken: cancellationToken
         );
 
-        return await dbConnection.QueryAsync<T>(command);
+        return await dbTransactions.Connection!.QueryAsync<T>(command);
     }
 
     public async Task<T?> QueryFirstOrDefaultAsync<T>(
@@ -187,7 +210,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
         object? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        EnsureConnectionOpen();
+        await using var connection = CreateConnection();
 
         var command = new CommandDefinition(
             sql,
@@ -196,7 +219,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
             cancellationToken: cancellationToken
         );
 
-        return await dbConnection.QueryFirstOrDefaultAsync<T>(command);
+        return await connection.QueryFirstOrDefaultAsync<T>(command);
     }
 
     public async Task<T?> QueryFirstOrDefaultAsync<T>(
@@ -206,8 +229,6 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
         object? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        EnsureConnectionOpen();
-
         var command = new CommandDefinition(
             sql,
             parameters,
@@ -216,6 +237,7 @@ public class SqlDataAccess(IConfiguration configuration) : ISqlDataAccess
             cancellationToken: cancellationToken
         );
 
-        return await dbConnection.QueryFirstOrDefaultAsync<T>(command);
+        return await dbTransactions.Connection!.QueryFirstOrDefaultAsync<T>(command);
     }
 }
+

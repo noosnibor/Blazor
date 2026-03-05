@@ -64,8 +64,7 @@ public static class MemoryStoredData
 
                 // Collection
                 new () {flngPermissionKey = 2, fstrPermission = "Collection.View", fstrDescription = "Collection View"},
-                new () {flngPermissionKey = 3, fstrPermission = "Collection.Edit", fstrDescription = "Collection Edit"},
-                new () {flngPermissionKey = 4, fstrPermission = "Collection.Add", fstrDescription = "Collection Add"},
+                new () {flngPermissionKey = 4, fstrPermission = "Collection.AddOrUpdate", fstrDescription = "Collection Add or Update"},
 
                 // Report
                 new () {flngPermissionKey = 7, fstrPermission = "Report.View", fstrDescription = "Report View"},

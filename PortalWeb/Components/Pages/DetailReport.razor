@@ -10,7 +10,7 @@
 @inject UserSession User
 @inject IJSRuntime JS
 
-
+@attribute [Authorize(Policy = "Report.View")]
 
 <div class="container-fluid">
 
@@ -31,27 +31,31 @@
 			</div>
 
 			<div>
-				<button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
-						type="submit"
-						disabled="@submitting">
-					@if (submitting)
-					{
-						<span class="spinner-border spinner-border-sm me-2"
-							  role="status"
-							  aria-hidden="true"></span>
-						<span>Saving...</span>
-					}
-					else
-					{
-						<span>Generate</span>
-					}
-				</button>
+				<AuthorizeView Policy="Report.Generate" Context="authState">
+					<Authorized>
+					<button class="btn btn-sm @(canUpdate ? "btn-info text-black" : "btn-primary text-white") border-0"
+							type="submit"
+							disabled="@submitting">
+						@if (submitting)
+						{
+							<span class="spinner-border spinner-border-sm me-2"
+								  role="status"
+								  aria-hidden="true"></span>
+							<span>Saving...</span>
+						}
+						else
+						{
+							<span>Generate</span>
+						}
+					</button>
 
-				<button class="btn btn-sm btn-secondary border-0"
-						type="button"
-						@onclick="ResetProperties">
-					Discard
-				</button>
+					<button class="btn btn-sm btn-secondary border-0"
+							type="button"
+							@onclick="ResetProperties">
+						Discard
+					</button>
+					</Authorized>
+				</AuthorizeView>
 			</div>
 		</div>
 
@@ -62,16 +66,8 @@
 				<!-- Left Side -->
 				<div class="col-lg-6">
 
-					<label class="form-label fw-semibold">Campus</label>
-					<InputSelect class="form-select mb-3"
-								 @bind-Value="parameter.LocationKey">
-						@foreach (var l in location!)
-						{
-							<option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-						}
-					</InputSelect>
-					<ValidationMessage For="@(() => parameter.LocationKey)" />
-					@*  <AuthorizeView Policy="AdminOnly" Context="authState">
+					<label class="form-label fw-semibold">Campus</label>					
+					 <AuthorizeView Policy="AdminOnly" Context="authState">
                         <Authorized>
                             <InputSelect class="form-select"
                                          @bind-Value="parameter.LocationKey">
@@ -92,10 +88,10 @@
                             </InputSelect>
                             <ValidationMessage For="@(() => parameter.LocationKey)" />
                         </NotAuthorized>
-                    </AuthorizeView> *@
+                    </AuthorizeView>
 
-					<div class="row">
-						<div class="col-md-6 mb-3">
+					<div class="row mt-4 mb-3">
+						<div class="col-md-6">
 							<label class="form-label fw-semibold">Collection Date From</label>
 							<InputDate class="form-control"
 									   @bind-Value="parameter.From"
@@ -103,7 +99,7 @@
 							<ValidationMessage For="@(() => parameter.From)" />
 						</div>
 
-						<div class="col-md-6 mb-3">
+						<div class="col-md-6">
 							<label class="form-label fw-semibold">Collection Date To</label>
 							<InputDate class="form-control"
 									   @bind-Value="parameter.To"
