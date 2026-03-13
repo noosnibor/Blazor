@@ -29,4 +29,5 @@ BEGIN
 	AND (@pstrLastname IS NULL OR c.fstrLastname LIKE @pstrLastname+'%')
 	AND (@plngCollectionTypeKey IS NULL OR c.flngCollectionTypeKey = @plngCollectionTypeKey)
 	AND (@plngPaymentTypeKey IS NULL OR c.flngPaymentTypeKey = @plngPaymentTypeKey)
+	AND c.flngVer = 0
 END

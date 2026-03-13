@@ -21,7 +21,7 @@ public static class MemoryStoredData
     {
         return
             [
-                new () {flngMemberStatusKey = 0, fstrMemberStatus = "Select Payee Status", fblnActive=true},
+                new () {flngMemberStatusKey = 0, fstrMemberStatus = "", fblnActive=true},
                 new () {flngMemberStatusKey = 1, fstrMemberStatus = "Member", fblnActive=true},
                 new () {flngMemberStatusKey = 2, fstrMemberStatus = "Partner", fblnActive=true},
                 new () {flngMemberStatusKey = 3, fstrMemberStatus = "Visitor", fblnActive=true},
@@ -33,7 +33,7 @@ public static class MemoryStoredData
     {
         return
             [
-                new () {flngCollectionTypeKey = 0, fstrCollectionType = "Select Collection Type", fblnActive = true},
+                new () {flngCollectionTypeKey = 0, fstrCollectionType = "", fblnActive = true},
                 new () {flngCollectionTypeKey = 1, fstrCollectionType = "Tithes", fblnActive = true},
                 new () {flngCollectionTypeKey = 2, fstrCollectionType = "Offering", fblnActive = true},
                 new () {flngCollectionTypeKey = 3, fstrCollectionType = "Sacrificial Seed", fblnActive = true},
@@ -80,7 +80,7 @@ public static class MemoryStoredData
     {
         return
             [
-                new () {flngCollectionNumberKey = 0, fstrCollectionNumberType = "Select a Collection Number"},
+                new () {flngCollectionNumberKey = 0, fstrCollectionNumberType = ""},
                 new () {flngCollectionNumberKey = 1, fstrCollectionNumberType = "One"},
                 new () {flngCollectionNumberKey = 2, fstrCollectionNumberType = "Two"},
                 new () {flngCollectionNumberKey = 3, fstrCollectionNumberType = "Three"},

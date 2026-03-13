@@ -64,41 +64,29 @@
 					<div class="col-lg-6">
 
 						<div class="row">
-							<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Campus Code</label>
-								<InputText class="form-control"
-										   @bind-Value="parameter.LocationKey"
-										   placeholder="Eg. HQ, CAN"
-										   maxlength="3" />
-								<ValidationMessage For="@(() => parameter.LocationKey)" />
+							<div class="col-md-6">
+							<CustomInputText Placeholder="Campus Code" Type="text" @bind-Value="parameter.LocationKey" MaxLength="3" />
 							</div>
 
-							<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Campus Name</label>
-								<InputText class="form-control"
-										   @bind-Value="parameter.LocationName"
-										   placeholder="Eg. WAFIF HEADQUARTERS" />
-								<ValidationMessage For="@(() => parameter.LocationName)" />
+							<div class="col-md-6">
+							<CustomInputText Placeholder="Campus Name" Type="text" @bind-Value="parameter.LocationName" />						
 							</div>
 						</div>
 
 
 
 
-						<div class="mb-3">
-						<label class="form-label fw-semibold">Campus Address</label>
-							<InputText class="form-control"
-									   @bind-Value="parameter.LocationAddress"
-									   placeholder="Required" />
-							<ValidationMessage For="@(() => parameter.LocationAddress)" />
+						<div class="mt-4">
+						<CustomInputText Placeholder="Campus Address" Type="text" @bind-Value="parameter.LocationAddress" />
+					
 						</div>
 
 
-						<div class="mb-3">
-						<label class="form-label fw-semibold">Start Date</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.When" />
-							<ValidationMessage For="@(() => parameter.When)" />
+						<div class="mt-4">
+						<CustomInputDate Label="Choose a date"
+										 @bind-Value="@parameter.When"
+										 DisableFutureDates="true"/>
+						
 						</div>
 
 					</div>

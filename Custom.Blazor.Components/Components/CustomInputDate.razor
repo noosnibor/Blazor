@@ -1,0 +1,274 @@
+﻿@inherits InputBase<DateTime?>
+
+<div class="datepicker-container">
+
+    <div class="floating-wrapper">
+
+        <div class="input-container position-relative">
+
+            <input class="form-control custom-date-input @CssClass"
+                   type="text"                 
+                   value="@InputText"
+                   @oninput="OnInputChanged"
+                   @onfocus="OpenCalendar" />
+            @*   placeholder="dd MMM yyyy" *@
+
+            <label class="floating-label @(IsFloating ? "active" : "")">
+                @Label
+            </label>
+
+            <span class="calendar-icon"
+                  @onclick="OpenCalendar">
+                <i class="bi bi-calendar3"></i>
+            </span>
+
+        </div>
+
+    </div>
+
+    <ValidationMessage For="@ValueExpression" />
+
+    @if (ShowCalendar)
+    {
+        <div class="calendar-overlay" @onclick="CloseCalendar"></div>
+
+        <div class="calendar-modern">
+
+            <div class="calendar-header-modern">
+                <button type="button" @onclick="PreviousMonth" class="nav-btn">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+
+                <div class="month-title">
+                    @CurrentMonth.ToString("MMMM yyyy")
+                </div>
+
+                <button type="button" @onclick="NextMonth" class="nav-btn">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+
+            <div class="calendar-grid header-row">
+                @foreach (var day in DaysOfWeek)
+                {
+                    <div>@day</div>
+                }
+            </div>
+
+            <div class="calendar-grid">
+                @foreach (var date in CalendarDays)
+                {
+                    @if (date.Month == CurrentMonth.Month)
+                    {
+                        <button type="button"
+                                class="day-btn @(GetDayClass(date))"
+                                disabled="@(DisableFutureDates && date.Date > DateTime.Today)"
+                                @onclick="() => SelectDate(date)">
+                            @date.Day
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="day-muted">@date.Day</div>
+                    }
+                }
+            </div>
+
+            <div class="calendar-footer">
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        disabled="@(CurrentValue == null)"
+                        @onclick="ClearDate">
+                    Clear
+                </button>
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        @onclick="SelectToday">
+                    Today
+                </button>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+
+    [Parameter] public string Label { get; set; } = "Select Date";
+    [Parameter] public bool DisableFutureDates { get; set; } = false;
+    [Parameter] public EventCallback<DateTime?> OnDateChanged { get; set; }
+
+    private DateTime CurrentMonth = DateTime.Today;
+    private bool ShowCalendar;
+
+    private string InputText = "";
+
+    private readonly string[] formats =
+    {
+        "dd/MM/yyyy",
+        "MM/dd/yyyy",
+        "MMM dd yyyy",
+        "yyyy-MM-dd",
+        "dd MMM yyyy",
+        "d MMM yyyy"
+    };
+
+    protected override void OnParametersSet()
+    {
+        InputText = CurrentValue?.ToString("dd MMM yyyy") ?? "";
+    }
+
+    private bool IsFloating =>
+        ShowCalendar || !string.IsNullOrWhiteSpace(InputText);
+
+    private string[] DaysOfWeek =>
+        CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames;
+
+    private List<DateTime> CalendarDays => GenerateCalendar();
+
+    private void OpenCalendar()
+    {
+        ShowCalendar = true;
+
+        if (!CurrentValue.HasValue)
+            CurrentMonth = DateTime.Today;
+    }
+
+    private void CloseCalendar() => ShowCalendar = false;
+
+    private void PreviousMonth() => CurrentMonth = CurrentMonth.AddMonths(-1);
+    private void NextMonth() => CurrentMonth = CurrentMonth.AddMonths(1);
+
+    private async Task SelectDate(DateTime date)
+    {
+        CurrentValue = date;
+        InputText = date.ToString("dd MMM yyyy");
+
+        ShowCalendar = false;
+
+        if (OnDateChanged.HasDelegate)
+            await OnDateChanged.InvokeAsync(CurrentValue);
+    }
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        InputText = e.Value?.ToString() ?? "";
+
+        // Prevent extremely long garbage input like 222222222222222
+        if (InputText.Length > 10)
+        {
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+            return;
+
+            // Let Blazor validation handle parsing
+            CurrentValueAsString = InputText;
+
+            if (CurrentValue.HasValue)
+            {
+                CurrentMonth = CurrentValue.Value;
+
+                if (OnDateChanged.HasDelegate)
+                    await OnDateChanged.InvokeAsync(CurrentValue);
+            }
+        }
+       
+
+        if (string.IsNullOrWhiteSpace(InputText))
+        {
+            CurrentValue = null;
+            return;
+        }
+
+        if (DateTime.TryParseExact(InputText,
+            formats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var parsed))
+        {
+            if (DisableFutureDates && parsed.Date > DateTime.Today)
+                return;
+
+            CurrentValue = parsed;
+            CurrentMonth = parsed;
+
+            if (OnDateChanged.HasDelegate)
+                await OnDateChanged.InvokeAsync(CurrentValue);
+        }
+    }
+
+    private async Task SelectToday()
+    {
+        CurrentValue = DateTime.Today;
+        InputText = DateTime.Today.ToString("dd MMM yyyy");
+        CurrentMonth = DateTime.Today;
+
+        ShowCalendar = false;
+
+        if (OnDateChanged.HasDelegate)
+            await OnDateChanged.InvokeAsync(CurrentValue);
+    }
+
+    private async Task ClearDate()
+    {
+        CurrentValue = null;
+        InputText = "";
+
+        ShowCalendar = false;
+
+        CurrentMonth = DateTime.Today; // prevent null usage later
+
+        if (OnDateChanged.HasDelegate)
+            await OnDateChanged.InvokeAsync(CurrentValue);
+    }
+
+    private string GetDayClass(DateTime date)
+    {
+        if (DisableFutureDates && date.Date > DateTime.Today)
+            return "disabled";
+
+        if (CurrentValue.HasValue && CurrentValue.Value.Date == date.Date)
+            return "active";
+
+        if (!CurrentValue.HasValue && date.Date == DateTime.Today)
+            return "active";
+
+        return "";
+    }
+
+    private List<DateTime> GenerateCalendar()
+    {
+        var first = new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1);
+        var start = first.AddDays(-(int)first.DayOfWeek);
+
+        return Enumerable.Range(0, 42)
+            .Select(d => start.AddDays(d))
+            .ToList();
+    }
+
+    protected override bool TryParseValueFromString(string? value,
+        out DateTime? result,
+        out string? validationErrorMessage)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result = null;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        if (DateTime.TryParse(value, out var parsed))
+        {
+            result = parsed;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = null;
+        validationErrorMessage = "Invalid date format.";
+        return false;
+    }
+}

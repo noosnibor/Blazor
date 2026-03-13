@@ -23,6 +23,7 @@ BEGIN
     WHERE   (@pstrLocationKey           IS NULL OR c.fstrLocationKey        = @pstrLocationKey)
     AND     (@pdtmTransactionDateFrom   IS NULL OR c.fdtmTransactionDate    >= @pdtmTransactionDateFrom)
     AND     (@pdtmTransactionDateTo     IS NULL OR c.fdtmTransactionDate    <= @pdtmTransactionDateTo)
+    AND c.flngVer = 0
 
     GROUP BY c.flngPaymentTypeKey,
              c.flngCollectionTypeKey,

@@ -1,12 +1,15 @@
-﻿@inherits InputBase<string>
+﻿@typeparam TValue
+@inherits InputBase<TValue>
 
 <div class="wrapper @(IsFocus ? "focused" : "")">
 
-    <input class="wrapper-input"
+    <input class="wrapper-input @CssClass"
            type="@InputType"
            placeholder=" "
-           @bind="CurrentValue"
-           @bind:event="oninput"
+           value="@BindConverter.FormatValue(CurrentValue)"
+           minlength="@MinLength"
+           maxlength="@MaxLength"
+           @oninput="OnInputChanged"
            @onfocus="() => IsFocus = true"
            @onblur="HandleBlur" />
 
@@ -34,19 +37,50 @@
 </div>
 
 @code {
+
     [Parameter]
     public string? Placeholder { get; set; } = "Enter a field value";
+
     [Parameter]
     public string? Type { get; set; } = "text";
+
+    [Parameter]
+    public int? MinLength { get; set; }
+
+    [Parameter]
+    public int? MaxLength { get; set; }
 
     private bool IsFocus = false;
     private bool CanShowPassword = false;
 
     private bool IsPassword => Type?.ToLower() == "password";
-    private string? InputType => IsPassword ? (CanShowPassword ? "text" : "password") : Type;
-    private string IconClass => CanShowPassword ? "bi bi-eye-slash" : "bi bi-eye";
 
-    private void TogglePassword() => CanShowPassword = !CanShowPassword;
+    private string? InputType => IsPassword
+        ? (CanShowPassword ? "text" : "password")
+        : Type;
+
+    private string IconClass => CanShowPassword
+        ? "bi bi-eye-slash"
+        : "bi bi-eye";
+
+    private void TogglePassword()
+        => CanShowPassword = !CanShowPassword;
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+
+        // Enforce MaxLength manually (extra safety)
+        if (MaxLength.HasValue && value.Length > MaxLength.Value)
+            return;
+
+        if (BindConverter.TryConvertTo<TValue>(value, CultureInfo.CurrentCulture, out var parsedValue))
+        {
+            CurrentValue = parsedValue;
+        }
+
+        await Task.CompletedTask;
+    }
 
     private void HandleBlur(FocusEventArgs e)
     {
@@ -55,7 +89,7 @@
     }
 
     private bool HasError =>
-     EditContext?.GetValidationMessages(FieldIdentifier).Any() == true;
+        EditContext?.GetValidationMessages(FieldIdentifier).Any() == true;
 
     private bool HasValidationState =>
         EditContext?.GetValidationMessages(FieldIdentifier).Any() == true ||
@@ -63,13 +97,13 @@
 
     private bool IsValid =>
         !HasError &&
-        !string.IsNullOrWhiteSpace(CurrentValue);
-
+        CurrentValue != null &&
+        !string.IsNullOrWhiteSpace(CurrentValue.ToString());
 
     private bool ShowValidationIcon =>
         HasValidationState;
 
-    private string CssClasss =>
+    private string CssClass =>
         HasError ? "invalid" :
         IsValid && HasValidationState ? "valid" :
         "";
@@ -79,10 +113,33 @@
             ? "bi bi-exclamation-circle-fill text-danger"
             : "bi bi-check-circle-fill text-success";
 
-    protected override bool TryParseValueFromString(string? value, out string result, out string validationErrorMessage)
+    protected override bool TryParseValueFromString(string? value, out TValue result, out string validationErrorMessage)
     {
-        result = value ?? "";
-        validationErrorMessage = "";
-        return true;
+        value ??= "";
+
+        if (MinLength.HasValue && value.Length < MinLength.Value)
+        {
+            result = default!;
+            validationErrorMessage = $"Minimum length is {MinLength.Value}.";
+            return false;
+        }
+
+        if (MaxLength.HasValue && value.Length > MaxLength.Value)
+        {
+            result = default!;
+            validationErrorMessage = $"Maximum length is {MaxLength.Value}.";
+            return false;
+        }
+
+        if (BindConverter.TryConvertTo<TValue>(value, CultureInfo.CurrentCulture, out var parsedValue))
+        {
+            result = parsedValue;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = default!;
+        validationErrorMessage = $"The {FieldIdentifier.FieldName} field is not valid.";
+        return false;
     }
 }

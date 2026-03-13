@@ -1,0 +1,103 @@
+﻿@typeparam TItem
+@typeparam TValue
+@inherits InputBase<TValue>
+
+<div class="floating-select-wrapper @(IsFloating ? "floating" : "")">
+
+    <select class="form-select @ValidationClass"
+            value="@CurrentValueAsString"
+            @onchange="HandleChange"
+            @onfocus="() => IsFocused = true"
+            @onblur="() => IsFocused = false">
+
+        @if (Items != null)
+        {
+            @foreach (var item in Items)
+            {
+                var value = ValueSelector(item);
+                var text = TextSelector(item);
+
+                <option value="@FormatValueAsString(value)">
+                    @text
+                </option>
+            }
+        }
+
+    </select>
+
+    <label>@Label</label>
+
+@*     <ValidationMessage For="ValueExpression" class="validation-message" /> *@
+
+</div>
+
+@code {
+
+    /* ============================= */
+    /* PARAMETERS */
+    /* ============================= */
+
+    [Parameter] public string Label { get; set; }
+
+    [Parameter] public IEnumerable<TItem> Items { get; set; }
+
+    [Parameter] public Func<TItem, TValue> ValueSelector { get; set; }
+
+    [Parameter] public Func<TItem, string> TextSelector { get; set; }
+
+    /* NEW EVENT */
+    [Parameter] public EventCallback<TValue> OnSelectedValueChanged { get; set; }
+
+    private bool IsFocused { get; set; }
+
+    private bool HasValue =>
+        !EqualityComparer<TValue>.Default.Equals(CurrentValue, default);
+
+    private bool IsFloating => IsFocused || HasValue;
+
+    private string ValidationClass =>
+        EditContext?.GetValidationMessages(FieldIdentifier).Any() == true
+            ? "is-invalid"
+            : "";
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        CurrentValueAsString = e.Value?.ToString();
+
+        // Notify EditForm binding
+        await ValueChanged.InvokeAsync(CurrentValue);
+
+        // Trigger custom event
+        if (OnSelectedValueChanged.HasDelegate)
+        {
+            await OnSelectedValueChanged.InvokeAsync(CurrentValue);
+        }
+    }
+
+    protected override bool TryParseValueFromString(string value, out TValue result, out string validationErrorMessage)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                result = default;
+                validationErrorMessage = null;
+                return true;
+            }
+
+            var targetType = Nullable.GetUnderlyingType(typeof(TValue)) ?? typeof(TValue);
+
+            result = (TValue)Convert.ChangeType(value, targetType);
+
+            validationErrorMessage = null;
+
+            return true;
+        }
+        catch
+        {
+            result = default;
+            validationErrorMessage = "Invalid selection.";
+            return false;
+        }
+    }
+}

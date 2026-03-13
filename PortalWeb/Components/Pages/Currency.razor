@@ -6,8 +6,9 @@
 @inject ILocationService LocationService
 @inject ICurrencyService CurrencyService
 @inject IJSRuntime JS
+@inject UserSession User
 
-@attribute [Authorize(Policy = "AdminOnly")]
+@* @attribute [Authorize(Policy = "AdminOnly")] *@
 
 <!--Auto scroll-->
 <div id="autoScroll"></div>
@@ -65,34 +66,33 @@
                    
 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold">Currency Code</label>
-                                        <InputText class="form-control"
-                                                    @bind-Value="parameter.CurrencyKey"
-                                                    placeholder="Eg. JMD, USD"
-                                                    maxlength="3" />
-                                        <ValidationMessage For="@(() => parameter.CurrencyKey)" />
+                                    <div class="col-md-6">
+                            <CustomInputText Placeholder="Currency Code" Type="text" @bind-Value="parameter.CurrencyKey" MaxLength="3" />
+                               
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Currency Type</label>
-                                        <InputText class="form-control"
-                                                   @bind-Value="parameter.CurrencyType"
-                                                   placeholder="Eg. Jamaican Dollars" />
-                                        <ValidationMessage For="@(() => parameter.CurrencyType)" />
+                                    <div class="col-md-6">
+                            <CustomInputText Placeholder="Currency Name" Type="text" @bind-Value="parameter.CurrencyType" />
+                            
                                     </div>
                                 </div>
 
 
-                                <div class="mb-3">
-                        <label class="form-label fw-semibold">Amount</label>
-                                    <InputNumber class="form-control"
-                                                    @bind-Value="parameter.Amount" />
-                                    <ValidationMessage For="@(() => parameter.Amount)" />
+                                <div class="mt-4">
+                        <CustomInputText Placeholder="Amount" Type="number" @bind-Value="parameter.Amount" />
+                       
                                 </div>
 
-                                <div class="mb-3">
-                        <label class="form-label fw-semibold">Campus</label>
+                                <div class="mt-4">
+                        <CustomInputSelect Label="Campus"
+                                           TItem="LocationModel"
+                                           Items="locationModel"
+                                           TValue="string"                                     
+                                           @bind-Value="parameter.LocationKey"
+                                           ValueSelector="r => (string)r.fstrLocationKey!"
+                                           TextSelector="r => r.fstrLocationName" />
+
+                      @*   <label class="form-label fw-semibold">Campus</label>
                                     <InputSelect class="form-select"
                                                  @bind-Value="parameter.LocationKey">
                                         <option value="">Select Location</option>
@@ -101,22 +101,22 @@
                                             <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
                                         }
                                     </InputSelect>
-                                    <ValidationMessage For="@(() => parameter.LocationKey)" />
+                                    <ValidationMessage For="@(() => parameter.LocationKey)" /> *@
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Effective From</label>
-                                        <InputDate class="form-control"
-                                                   @bind-Value="parameter.EffectiveFrom" />
-                                        <ValidationMessage For="@(() => parameter.EffectiveFrom)" />                              
+                            <CustomInputDate Label="Effective From"
+                                             @bind-Value="@parameter.EffectiveFrom"
+                                             DisableFutureDates="true" />
+                                                     
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Effective To</label>
-                                        <InputDate class="form-control"
-                                                   @bind-Value="parameter.EffectiveTo" />
-                                        <ValidationMessage For="@(() => parameter.EffectiveTo)" />
+                            <CustomInputDate Label="Effective To"
+                                             @bind-Value="@parameter.EffectiveTo"
+                                             DisableFutureDates="true" />
+                            
                                     </div>
                                 </div>                   
                   
@@ -236,6 +236,7 @@
         try
         {
             locationModel = await LocationService.SelectLocation(null, true) ?? [];
+            parameter.LocationKey = User.LocationKey;
             currencyModel = await CurrencyService.SelectCurrency() ?? [];
         }
         catch (Exception ex)

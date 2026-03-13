@@ -161,289 +161,86 @@
 			</div>
 
 			<div>
-				@if (ConvertedAmount == 0)
-				{
-					<span class="text-success-emphasis">@(paymentTypeSummary.GrandTotal.ToString("C2") + " " + CurrencyKey)</span>
-				}
-				else
-				{
-					<span class="text-success-emphasis">@(ConvertedAmount.ToString("C2") + " " + CurrencyKey)</span>
-				}
-
+				@* <span class="text-success-emphasis">@summaryModels.GrandTotal.ToString("C2")</span> *@
+				
 			</div>
 		</div>
 
 		<!--Auto scroll-->
 		<div id="autoScroll"></div>
 		<div class="Card border-1 rounded-0">
+			
 			<table class="table table-borderless table-responsive text-center align-middle">
 				<thead class="border-bottom">
 					<tr>
-						<th></th>
-						@if (SelectedOption == "paymentsummary")
+						<th class="text-start">Type</th>
+
+						@foreach (var column in summaryModels.Columns)
 						{
-							@foreach (var p in paymentSummary.Months!)
-							{
-								<th class="fw-bold text-end">@p</th>
-							}
+							<th class="text-end">@column</th>
 						}
 
-
-						@if (SelectedOption == "collectionsummary")
-						{
-							@foreach (var p in collectionSummary.Months!)
-							{
-								<th class="fw-bold text-end">@p</th>
-							}
-						}
-
-						@if (SelectedOption == "allcampus")
-						{
-							@foreach (var p in locationSummary.Months!)
-							{
-								<th class="fw-bold text-end">@p</th>
-							}
-						}
-
-						@if (SelectedOption == "paymentlist")
-						{
-							@foreach (var currency in paymentTypeSummary.Currencies!)
-							{
-								<th class="text-end">@currency</th>
-							}
-							<th class="fw-bold text-end">Total</th>
-						}
-
-
-						@if (SelectedOption == "collectionlist")
-						{
-							@foreach (var currency in collectionTypeSummary.Currencies!)
-							{
-								<th class="text-end">@currency</th>
-							}
-							<th class="fw-bold text-end">Total</th>
-						}
-					
+						<th class="text-end">Total</th>
 					</tr>
 				</thead>
 
 				<tbody>
 
-					@if (SelectedOption == "paymentsummary")
+					@foreach (var row in summaryModels.Rows)
 					{
-						@foreach (var row in paymentSummary.Data!)
-						{
-							<tr>
-								<td class="text-start">@row.Id</td>
+						<tr>
+							<td class="text-start">@row</td>
 
-								@foreach (var p in paymentSummary.Months!)
-								{
-									<td class="text-end">@Format(row.Amount[p])</td>
-								}
-							</tr>
-						}
+							@foreach (var column in summaryModels.Columns)
+							{
+								var key = (row, column);
+								decimal value = 0;
 
+								if (showUSD)
+									summaryModels.CellTotalsUSD.TryGetValue(key, out value);
+								else
+									summaryModels.CellTotals.TryGetValue(key, out value);
+
+								<td class="text-end">@value.ToString("N2")</td>
+							}
+
+							@{
+								decimal rowTotal = 0;
+
+								if (showUSD)
+									summaryModels.RowTotalsUSD.TryGetValue(row, out rowTotal);
+								else
+									summaryModels.RowTotals.TryGetValue(row, out rowTotal);
+							}
+
+							<td class="text-end">@rowTotal.ToString("N2")</td>
+						</tr>
 					}
-
-
-					@if (SelectedOption == "collectionsummary")
-					{
-						@foreach (var row in collectionSummary.Data!)
-						{
-							<tr>
-								<td class="text-start">@row.Id</td>
-
-								@foreach (var p in collectionSummary.Months!)
-								{
-									<td class="text-end">@Format(row.Amount[p])</td>
-								}
-							</tr>
-						}
-
-					}
-
-					@if (SelectedOption == "allcampus")
-					{
-						@foreach (var row in locationSummary.Data!)
-						{
-							<tr>
-								<td class="text-start">@row.Id</td>
-
-								@foreach (var p in locationSummary.Months!)
-								{
-									<td class="text-end">@Format(row.Amount[p])</td>
-								}
-							</tr>
-						}
-
-					}
-
-
-					@if (SelectedOption == "paymentlist")
-					{
-
-						@foreach (var paymentType in paymentTypeSummary.PaymentTypes!)
-						{
-							<tr>
-								<td class="text-start">@MemoryStoredData.GetPaymentType().FirstOrDefault(x => x.flngPaymentKey == paymentType)!.fstrPaymentType</td>
-
-								@foreach (var currency in paymentTypeSummary.Currencies!)
-								{
-
-
-									<td class="text-end">
-										@(paymentTypeSummary.CellTotals.TryGetValue((paymentType, currency), out var value)
-																	? value.ToString("N2")
-																	: "-")
-									</td>
-								}
-
-
-
-
-								<!-- Row Total -->
-								<td class="fw-bold text-end">
-									@(paymentTypeSummary.RowTotals.TryGetValue(paymentType, out var rowVal)
-																? rowVal.ToString("N2")
-																	: "0.00")
-								</td>
-							</tr>
-						}
-					}
-
-
-					@if (SelectedOption == "collectionlist")
-					{
-
-						@foreach (var collectionType in collectionTypeSummary.CollectionTypes!)
-						{
-							<tr>
-								<td class="text-start">@MemoryStoredData.GetCollectionType().FirstOrDefault(x => x.flngCollectionTypeKey == collectionType)!.fstrCollectionType</td>
-
-								@foreach (var currency in paymentTypeSummary.Currencies!)
-								{
-
-
-									<td class="text-end">
-										@(collectionTypeSummary.CellTotals.TryGetValue((collectionType, currency), out var value)
-																	? value.ToString("N2")
-																	: "-")
-						</td>
-												}
-
-
-
-
-							<!-- Row Total -->
-							<td class="fw-bold text-end">
-								@(collectionTypeSummary.RowTotals.TryGetValue(collectionType, out var rowVal)
-															? rowVal.ToString("N2")
-															: "0.00")
-						</td>
-					</tr>
-										}
-					}
-
 
 				</tbody>
 
-				<tfoot class="table-success">
-					@if (SelectedOption == "paymentsummary")
-					{
-						<!-- GRAND TOTAL -->
-						<tr class="fw-bold border-top text-success">
+				<tfoot>
+					<tr>
+						<th class="text-start">Total</th>
 
-							<th class="fw-bold text-start text-success">Grand Total:</th>
-							@foreach (var p in paymentSummary.Months!)
-							{
-								<th class="fw-bold text-end text-success">
-									@Format(paymentSummary.Data!.Sum(r => r.Amount[p]))
-								</th>
-							}
+						@foreach (var column in summaryModels.Columns)
+						{
+							decimal colTotal = 0;
 
-						</tr>
-					}
+							if (showUSD)
+								summaryModels.ColumnTotalsUSD.TryGetValue(column, out colTotal);
+							else
+								summaryModels.ColumnTotals.TryGetValue(column, out colTotal);
 
+							<th class="text-end">@colTotal.ToString("N2")</th>
+						}
 
-					@if (SelectedOption == "collectionsummary")
-					{
-						<!-- GRAND TOTAL -->
-						<tr class="fw-bold border-top text-success">
-
-							<th class="fw-bold text-start text-success">Grand Total:</th>
-							@foreach (var p in collectionSummary.Months!)
-							{
-								<th class="fw-bold text-end text-success">
-									@Format(collectionSummary.Data!.Sum(r => r.Amount[p]))
-								</th>
-							}
-
-						</tr>
-					}
-
-					@if (SelectedOption == "allcampus")
-					{
-						<!-- GRAND TOTAL -->
-						<tr class="fw-bold border-top text-success">
-
-							<th class="fw-bold text-start text-success">Grand Total:</th>
-							@foreach (var p in locationSummary.Months!)
-							{
-								<th class="fw-bold text-end text-success">
-									@Format(locationSummary.Data!.Sum(r => r.Amount[p]))
-								</th>
-							}
-
-						</tr>
-					}
-
-
-					@if (SelectedOption == "paymentlist")
-					{
-						<tr>
-							<th class="fw-bold text-start text-success">Total</th>
-
-							@foreach (var currency in paymentTypeSummary.Currencies!)
-							{
-
-								<th class="fw-bold text-success text-end">
-									@(paymentTypeSummary.ColumnTotals.TryGetValue(currency, out var colVal)
-																? colVal.ToString("N2")
-																: "0.00")
+						<th class="text-end">
+							@(showUSD
+							? summaryModels.GrandTotalUSD.ToString("N2")
+							: summaryModels.GrandTotal.ToString("N2"))
 						</th>
-												}
-
-							<!-- Grand Total -->
-							<th class="fw-bold table-success text-success text-end">
-								@(paymentTypeSummary.GrandTotal.ToString("C2") ?? "0.00")
-							</th>
-						</tr>
-					}
-
-
-					@if (SelectedOption == "collectionlist")
-					{
-						<tr>
-							<th class="fw-bold text-start text-success">Total</th>
-
-							@foreach (var currency in collectionTypeSummary.Currencies!)
-							{
-
-								<th class="fw-bold text-success text-end">
-									@(collectionTypeSummary.ColumnTotals.TryGetValue(currency, out var colVal)
-																? colVal.ToString("N2")
-																: "0.00")
-						</th>
-												}
-
-							<!-- Grand Total -->
-							<th class="fw-bold table-success text-success text-end">
-								@(collectionTypeSummary.GrandTotal.ToString("C2") ?? "0.00")
-							</th>
-						</tr>
-					}
-
-
+					</tr>
 				</tfoot>
 			</table>
 		</div>
@@ -464,18 +261,16 @@
 			<div>
 				<AuthorizeView Policy="AdminOnly" Context="authState">
 					<Authorized>
-						<InputSelect class="form-select"
-									 TValue="string"
-									 Value="CurrencyKey"
-									 ValueChanged="OnCurrencyChanged"
-									 ValueExpression="@(() => CurrencyKey)">
-							<option value="">No Conversion</option>
-							@foreach (var c in currency!)
-							{
-								<option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
-							}
-						</InputSelect>
-					</Authorized>					
+
+						<div class="my-3 mt-5">
+							<div class="d-flex gap-3">
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" @bind="showUSD">
+									<label class="form-check-label">Convert to USD</label>
+								</div>
+							</div>
+						</div>
+					</Authorized>
 				</AuthorizeView>
 			</div>
 		</div>
@@ -491,16 +286,13 @@
 	private IEnumerable<LocationModel>? location = [];
 	private IEnumerable<CurrencyModel>? currency = [];
 
+	private PivotSummaryModel summaryModels = new();
+
 	private CurrencyModel currencySelected = new();
 
-	private PaymentTypeSummary paymentTypeSummary = new();
-	private CollectionTypeSummary collectionTypeSummary = new();
-
-	private MonthlySummary paymentSummary = new();
-	private MonthlySummary collectionSummary = new();
-	private MonthlySummary locationSummary = new();
-
 	private List<RadioButtonModel> Options = new();
+
+	private bool showUSD = false;
 
 	private IEnumerable<RadioButtonModel> FilteredOptions =>
 		string.IsNullOrEmpty(LocationKey)
@@ -543,6 +335,8 @@
 			}
 		}
 	}
+
+
 
 	protected override async Task OnInitializedAsync()
 	{	
@@ -595,6 +389,13 @@
 			},
 			new RadioButtonModel
 			{
+				Value = "alltotals",
+				Title = "Only Totals",
+				Description = "Show totals for each month",
+				Icon = "bi bi-payment"
+			},
+			new RadioButtonModel
+			{
 				Value = "allcampus",
 				Title = "Monthly Summary for all Campuses",
 				Description = "Show monthly totals for all campuses",
@@ -612,7 +413,26 @@
 
 	private async Task OnOptionClicked(string value)
 	{
+
+		if (value == "paymentlist")
+		{
+			summaryModels = await ReportService.GenerateSummaryReport(parameter, true, false);
+		}
+		if (value == "paymentsummary")
+		{
+			summaryModels = await ReportService.GenerateSummaryReport(parameter, true, true);
+		}
+		if (value == "collectionlist")
+		{
+			summaryModels = await ReportService.GenerateSummaryReport(parameter, false, false);
+		}
+		if (value == "collectionsummary")
+		{
+			summaryModels = await ReportService.GenerateSummaryReport(parameter, false, true);
+		}
 		await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
+
+		StateHasChanged();
 	}
 
 	private Task OnLocationChanged(string value)
@@ -628,28 +448,28 @@
 	{
 		CurrencyKey = value;
 
-		if (paymentTypeSummary.GrandTotal == 0)
-		{
-			ToastService.ShowError("Cannot convert a zero amount");
-		}
-		else
-		{
-			decimal Amount = 0;
+		// if (paymentTypeSummary.GrandTotal == 0)
+		// {
+		// 	ToastService.ShowError("Cannot convert a zero amount");
+		// }
+		// else
+		// {
+		// 	decimal Amount = 0;
 
-			if (CurrencyKey == "")
-			{
-				ConvertedAmount = paymentTypeSummary.GrandTotal;
-			}
-			else
-			{
-				Amount = currency!.FirstOrDefault(c => c.fstrCurrencyKey == CurrencyKey && c.fdtmEffectiveFrom <= DateTime.Today && c.fdtmEffectiveTo >= DateTime.Today)!.fcurAmount;
-				ConvertedAmount = paymentTypeSummary.GrandTotal / Amount;
-			}
-			
-		}	
+		// 	if (CurrencyKey == "")
+		// 	{
+		// 		ConvertedAmount = paymentTypeSummary.GrandTotal;
+		// 	}
+		// 	else
+		// 	{
+		// 		Amount = currency!.FirstOrDefault(c => c.fstrCurrencyKey == CurrencyKey && c.fdtmEffectiveFrom <= DateTime.Today && c.fdtmEffectiveTo >= DateTime.Today)!.fcurAmount;
+		// 		ConvertedAmount = paymentTypeSummary.GrandTotal / Amount;
+		// 	}
+
+		// }	
 
 
-		return Task.CompletedTask;
+		 return Task.CompletedTask;
 	}
 
 	private string Format(decimal value)
@@ -676,19 +496,20 @@
 		await Task.Delay(1000);
 		try
 		{
+			summaryModels = await ReportService.GenerateSummaryReport(parameter, true, false);
 
-			paymentTypeSummary = await ReportService.GeneratePaymentType(parameter!);
-			paymentSummary = await ReportService.GenerateMonthlySummaryByPaymentType(parameter!);			
+			// paymentTypeSummary = await ReportService.GeneratePaymentType(parameter!);
+			// paymentSummary = await ReportService.GenerateMonthlySummaryByPaymentType(parameter!);			
 
-			collectionTypeSummary = await ReportService.GenerateCollectionType(parameter!);
-			collectionSummary = await ReportService.GenerateMonthlySummaryByCollectionType(parameter!);
+			// collectionTypeSummary = await ReportService.GenerateCollectionType(parameter!);
+			// collectionSummary = await ReportService.GenerateMonthlySummaryByCollectionType(parameter!);
 
-			locationSummary = await ReportService.GenerateMonthlySummaryByLocation(parameter!);
+			// locationSummary = await ReportService.GenerateMonthlySummaryByLocation(parameter!);
 
-			if (paymentTypeSummary.GrandTotal == 0 || !paymentSummary.Months.Any() || collectionTypeSummary.GrandTotal == 0|| !collectionSummary.Months.Any() || !locationSummary.Months.Any())
-			{
-				ToastService.ShowWarning("No data found");
-			}
+			// if (paymentTypeSummary.GrandTotal == 0 || !paymentSummary.Months.Any() || collectionTypeSummary.GrandTotal == 0|| !collectionSummary.Months.Any() || !locationSummary.Months.Any())
+			// {
+			// 	ToastService.ShowWarning("No data found");
+			// }
 
 			await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
 
@@ -705,12 +526,13 @@
 
 	private void ResetProperties()
 	{
-		paymentTypeSummary = new();
-		collectionTypeSummary = new();
+		// paymentTypeSummary = new();
+		// collectionTypeSummary = new();
 
-		paymentSummary = new();
-		collectionSummary = new();
-		locationSummary = new();
+		// paymentSummary = new();
+		// collectionSummary = new();
+		// locationSummary = new();
+		summaryModels = new();
 
 		// Options = new();
 		submitting = false;

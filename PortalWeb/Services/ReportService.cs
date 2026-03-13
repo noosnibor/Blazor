@@ -15,12 +15,14 @@ public interface IReportService
     Task<MonthlySummary> GenerateMonthlySummaryByLocation(SummaryReportDto parameters);
     Task<MonthlySummary> GenerateMonthlySummaryByPaymentType(SummaryReportDto parameters);
     Task<PaymentTypeSummary> GeneratePaymentType(SummaryReportDto parameters);
+    Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month);
 }
 
-public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locationService) : IReportService
+public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locationService, ICurrencyService currencyService) : IReportService
 {
     private readonly ISqlDataAccess sqlDataAccess = sqlDataAccess;
     private readonly ILocationService locationService = locationService;
+    private readonly ICurrencyService currencyService = currencyService;
 
     public async Task<IReadOnlyList<DetailReportModel>> DetailReport(DetailReportDto parameters)
     {
@@ -341,5 +343,131 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
                                                                    col);
 
         return result?.AsList() ?? [];
+    }
+
+
+    public async Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month)
+    {
+        // Pull data from database
+        var results = await SummaryReport(parameters);
+
+        // Check if any report was return
+        if (!results.Any())
+            return new PivotSummaryModel();
+
+        // Get exchange rate
+        //var exchangeRates = new Dictionary<string, decimal>
+        //{
+        //    { "USD", 1m },
+        //    { "JMD", 150m },
+        //    { "CAN", 0.74m }
+        //};
+        var currencies = await currencyService.SelectCurrency("USD", "HQ", true) ?? [];
+
+        currencies = [.. currencies.Where(x => x.fdtmEffectiveFrom <= parameters.TransactionDateFrom && x.fdtmEffectiveTo >= parameters.TransactionDateTo)];
+
+        Dictionary<string, decimal> exchangeRates = currencies!.ToDictionary(c => c.fstrCurrencyKey!, c => c.fcurAmount)!;
+
+        // Initialize columns and rows
+        var columns = new HashSet<string>();
+        var rows = new HashSet<string>();
+
+        // Initialize column and row totals
+        var cellTotals = new Dictionary<(string Row, string Column), decimal>();
+        var rowTotals = new Dictionary<string, decimal>();
+        var columnTotals = new Dictionary<string, decimal>();
+        var usdCellTotals = new Dictionary<(string Row, string Column), decimal>();
+        var rowTotalsUSD = new Dictionary<string, decimal>();
+        var columnTotalsUSD = new Dictionary<string, decimal>();
+
+        // Get grand total
+        decimal grandTotal = 0;
+        decimal grandTotalUSD = 0;
+
+        // Decode payment type and collection type
+        var paymentTypes = MemoryStoredData.GetPaymentType()
+       .ToDictionary(x => x.flngPaymentKey, x => x.fstrPaymentType);
+
+        var collectionTypes = MemoryStoredData.GetCollectionType()
+            .ToDictionary(x => x.flngCollectionTypeKey, x => x.fstrCollectionType);
+
+        foreach (var r in results)
+        {
+            if (string.IsNullOrEmpty(r.fstrCurrencyKey))
+                continue;
+
+            // Get the currency key
+            string currency = r.fstrCurrencyKey;
+
+            // ROW (Payment or Collection)
+            string? rowKey = type
+                ? paymentTypes.GetValueOrDefault(r.flngPaymentTypeKey, "Unknown")
+                : collectionTypes.GetValueOrDefault(r.flngCollectionTypeKey, "Unknown");
+
+            // COLUMN (Currency or Month)
+            string columnKey = month
+                ? SelectedMonth(r.fdtmTransactionDate)
+                : r.fstrCurrencyKey;
+
+            var value = r.fcurLocalAmount;
+
+            rows.Add(rowKey!);
+            columns.Add(columnKey);
+
+            var cellKey = (rowKey, columnKey);
+
+            cellTotals[cellKey!] = cellTotals.TryGetValue(cellKey!, out var cVal)
+                ? cVal + value
+                : value;
+
+            // Convert to USD
+            var rate = exchangeRates.ContainsKey(currency) ? exchangeRates[currency] : 1;
+
+            decimal usdValue = value / rate;
+
+            usdCellTotals[cellKey!] = usdCellTotals.TryGetValue(cellKey!, out var usdVal)
+                ? usdVal + usdValue
+                : usdValue;
+
+            
+
+            rowTotals[rowKey!] = rowTotals.TryGetValue(rowKey!, out var rVal)
+                ? rVal + value
+                : value;
+
+            // Row totals
+            rowTotalsUSD[rowKey!] = rowTotalsUSD.TryGetValue(rowKey!, out var rVal1)
+                ? rVal1 + usdValue
+                : usdValue;
+
+            columnTotals[columnKey] = columnTotals.TryGetValue(columnKey, out var colVal)
+                ? colVal + value
+                : value;
+
+            // Column totals
+            columnTotalsUSD[columnKey] = columnTotalsUSD.TryGetValue(columnKey, out var colVal1)
+                ? colVal1 + usdValue
+                : usdValue;
+
+            grandTotal += value;
+            grandTotalUSD += usdValue;
+        }
+
+        return new PivotSummaryModel
+        {
+            Rows = [.. rows.OrderBy(x => x)],
+            Columns = [.. columns.OrderBy(x => x)],
+
+            CellTotals = cellTotals,
+            CellTotalsUSD = usdCellTotals,
+
+            RowTotals = rowTotals,
+            RowTotalsUSD = rowTotalsUSD,
+            ColumnTotals = columnTotals,
+            ColumnTotalsUSD = columnTotalsUSD,
+
+            GrandTotal = grandTotal,
+            GrandTotalUSD = grandTotalUSD
+        };
     }
 }

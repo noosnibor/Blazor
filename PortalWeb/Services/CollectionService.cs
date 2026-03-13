@@ -76,7 +76,7 @@ public class CollectionService(ISqlDataAccess sqlDataAccess) : ICollectionServic
             parameters);
 
 
-            if (result == 1)
+            if (result >= 1)
             {
                 return insert
                     ? new() { Type = ToastType.Success, Message = "Collection was added successfully" }

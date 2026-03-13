@@ -14,7 +14,7 @@
 <!--Auto scroll-->
 <div id="autoScroll"></div>
 
-<div class="container-fluid ">
+<div class="container">
 
     <!-- ========== Form =========== -->
     <EditForm Model="parameter" OnValidSubmit="OnFormSubmit">
@@ -69,138 +69,118 @@
                 <!-- Left Side -->
                 <div class="col-lg-6">
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Collection No.</label>
-                            <select class="form-select"
-                                    @bind="selectedCollectionNumber"
-                                    @bind:after="OnSelectedValueChanged"
-                                    aria-label="Small select example">
-                                @foreach (var item in MemoryStoredData.GetCollectionNumber())
-                                {
-                                    <option value="@item.flngCollectionNumberKey">@item.fstrCollectionNumberType</option>
-                                }
-                            </select>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <CustomInputSelect  Label="Collection Number"
+                                                TItem="CollectionNumber"
+                                                Items="MemoryStoredData.GetCollectionNumber()"
+                                                TValue="int"
+                                                OnSelectedValueChanged="OnSelectedValueChanged"
+                                                @bind-Value="selectedCollectionNumber"
+                                                ValueSelector="r => (int)r.flngCollectionNumberKey"
+                                                TextSelector="r => r.fstrCollectionNumberType" />
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Collection Date</label>
-                            <InputDate TValue="DateTime?"
-                                       class="form-control"
-                                       Value="@parameter.TransactionDate"
-                                       ValueChanged="OnDateChanged"
-                                       ValueExpression="@(() => parameter.TransactionDate)" />
-
-                            <ValidationMessage For="@(() => parameter.TransactionDate)" />
+                        <div class="col-md-6">
+                            <CustomInputDate Label="Choose a date" 
+                                             @bind-Value="@parameter.TransactionDate" 
+                                             DisableFutureDates="true"
+                                             OnDateChanged="OnDateChanged" />
                         </div>
                     </div>
 
+                    <div class="row mt-1">
+                        <div class="col-md-6">
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Collection Type</label>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.CollectionTypeKey">
-                                @foreach (var c in MemoryStoredData.GetCollectionType().Where(a => a.fblnActive == true).ToList())
-                                {
-                                    <option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
+                            <CustomInputSelect Label="Collection Type"
+                                               TItem="CollectionType"
+                                               Items="MemoryStoredData.GetCollectionType()"
+                                               TValue="int"
+                                               @bind-Value="parameter.CollectionTypeKey"
+                                               ValueSelector="r => (int)r.flngCollectionTypeKey"
+                                               TextSelector="r => r.fstrCollectionType" />
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Status</label>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.MemberStatusKey">
-                                @foreach (var m in MemoryStoredData.GetMemberStatus().Where(a => a.fblnActive == true).ToList())
-                                {
-                                    <option value="@m.flngMemberStatusKey">@m.fstrMemberStatus</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.MemberStatusKey)" />
+                        <div class="col-md-6">
+
+                            <CustomInputSelect Label="Status"
+                                               TItem="MemberStatus"
+                                               Items="MemoryStoredData.GetMemberStatus()"
+                                               TValue="int"
+                                               @bind-Value="parameter.MemberStatusKey"
+                                               ValueSelector="r => (int)r.flngMemberStatusKey"
+                                               TextSelector="r => r.fstrMemberStatus" />
+
                         </div>
+                    </div>
+
+                    <div class="row mt-1">
+                        <label class="form-label fw-semibold">Payment Type</label>
+                        <InputRadioGroup @bind-Value="parameter.PaymentTypeKey">
+                            <div class="row g-3">
+
+                                @foreach (var p in MemoryStoredData.GetPaymentType().Where(a => a.fblnActive == true).ToList())
+                                {
+                                    <div class="col-12 col-md-6">
+                                        <label class="w-100">
+                                            <InputRadio class="d-none"
+                                                        Value="@p.flngPaymentKey" />
+
+                                            <div class="payment-bubble text-center
+                                                @(parameter.PaymentTypeKey == p.flngPaymentKey ? "active" : "")">
+
+                                                @p.fstrPaymentType
+
+                                            </div>
+                                        </label>
+                                    </div>
+                                }
+
+                            </div>
+                        </InputRadioGroup>
+                        <ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
                     </div>
                 </div>
 
                 <!-- Right Side -->
                 <div class="col-lg-6">
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Email Address</label>
-                        <InputText class="form-control"
-                                   @bind-Value="parameter.EmailAddress"
-                                   placeholder="Eg.john.doe@AppDomain.com" />
-                        <ValidationMessage For="@(() => parameter.EmailAddress)" />
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">First Name</label>
-                            <InputText class="form-control"
-                                           @bind-Value="parameter.Firstname"
-                                           placeholder="Eg. John"/>
-                            <ValidationMessage For="@(() => parameter.Firstname)" />
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Last Name</label>
-                            <InputText class="form-control"
-                                       @bind-Value="parameter.Lastname"
-                                       placeholder="Eg. Doe"/>
-                            <ValidationMessage For="@(() => parameter.Lastname)" />
+                    <div class="row mt-3">
+                        <div col-md-12>
+                            <CustomInputText Placeholder="Email Address" Type="text" @bind-Value="parameter.EmailAddress" />
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Currency Type</label>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.CurrencyKey">
-                                @foreach (var c in currencyModel!)
-                                {
-                                    <option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.CurrencyKey)" />
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <CustomInputText Placeholder="First Name" Type="text" @bind-Value="parameter.Firstname" />
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Amount</label>
-                            <InputNumber class="form-control"
-                                         @bind-Value="parameter.Amount" />
-                            <ValidationMessage For="@(() => parameter.Amount)" />
+                        <div class="col-md-6">
+                            <CustomInputText Placeholder="Last Name" Type="text" @bind-Value="parameter.Lastname" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+
+                            <CustomInputSelect Label="Currency Type"
+                                               TItem="CurrencyModel"
+                                               Items="currencyModel"
+                                               TValue="string"
+                                               @bind-Value="parameter.CurrencyKey"
+                                               ValueSelector="r => (string)r.fstrCurrencyKey!"
+                                               TextSelector="r => r.fstrCurrencyType" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <CustomInputText TValue="decimal" Placeholder="Amount" Type="number" @bind-Value="parameter.Amount" />
                         </div>
                     </div> 
                     
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Payment Type</label>
-                    <InputRadioGroup @bind-Value="parameter.PaymentTypeKey">
-                        <div class="row g-3">
-
-                            @foreach (var p in MemoryStoredData.GetPaymentType().Where(a => a.fblnActive == true).ToList())
-                            {
-                                <div class="col-12 col-md-6">
-                                    <label class="w-100">
-                                        <InputRadio class="d-none"
-                                                    Value="@p.flngPaymentKey" />
-
-                                        <div class="payment-bubble text-center
-                                            @(parameter.PaymentTypeKey == p.flngPaymentKey ? "active" : "")">
-
-                                            @p.fstrPaymentType
-
-                                        </div>
-                                    </label>
-                                </div>
-                            }
-
-                        </div>
-                    </InputRadioGroup>
-                    <ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
-                </div>
+ 
 
             </div>
         </div>
@@ -325,7 +305,7 @@
                 <img width="50" height="50" src="/img/table.png" class="me-2" />
 
                 <div class="d-flex flex-column">
-                    <span class="fw-semibold">Table Data</span>
+                    <span class="fw-semibold">Table Data (@collectionModel.Count()) @(collectionModel.Count() <= 1 ? "record" : "records")</span>
                     <small class="lh-1 small-text">Show all active and inactive currencies</small>
                 </div>
             </div>
@@ -355,11 +335,12 @@
                     SearchPredicate="SearchCollection"
                     ColumnCount="8"
                     SumSelector="@(s => s.fcurLocalAmount)"
-                    SumColumnIndex="6"
-                    SumLabel="Total">
+                    SumColumnIndex="7"
+                    SumLabel="Total"
+        >
 
             <HeaderTemplate>
-                <tr>
+                   <tr>
                     <th>Name</th>
                     <th>Member Type</th>
                     <th>Collection Type</th>
@@ -368,7 +349,7 @@
                     <th>Amount</th>
                     <th>Local Amount</th>
                     <th>Submitted By</th>
-                </tr>
+                   </tr>
             </HeaderTemplate>
 
             <RowTemplate Context="collection">
@@ -403,7 +384,7 @@
     private bool submitting = false;
     private bool canUpdate = false;
     private bool reload = false;
-    private int selectedCollectionNumber = 0;
+    private int selectedCollectionNumber = 1;
     private decimal grandTotal = 0;
 
 
@@ -416,6 +397,16 @@
             };
         await LoadAllDataAsync();
     }
+
+    ///////////////// <summary>
+    /// ///////////////////
+    /// </summary>
+    // private HashSet<CollectionModel> selectedCollection = new();
+
+    // private void OnUsersSelected(HashSet<CollectionModel> collection)
+    // {
+    //     selectedCollection = collection;
+    // }
 
     private async Task OnSelectedValueChanged() => await LoadAllDataAsync();
 
@@ -430,15 +421,19 @@
     private async Task LoadCurrency()
     {
         currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
-        currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter.TransactionDate!.Value.Date &&
-            c.fdtmEffectiveTo.Date >= parameter.TransactionDate!.Value.Date);
+        if (parameter?.TransactionDate.HasValue == true)
+        {
+            currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter?.TransactionDate!.Value.Date &&
+            c.fdtmEffectiveTo.Date >= parameter?.TransactionDate!.Value.Date);
+        }
+
     }
 
     private async Task LoadAllDataAsync()
     {
         try
         {
-            selectedCollectionNumber = 1;
+            // selectedCollectionNumber = (selectedCollectionNumber == 1 ? 1 : selectedCollectionNumber);
 
             await LoadCurrency();
 
@@ -513,15 +508,27 @@
          || MemoryStoredData.GetMemberStatus().FirstOrDefault(c => c.flngMemberStatusKey == collection.flngMemberStatusKey)!.fstrMemberStatus!.Contains(searchText, StringComparison.OrdinalIgnoreCase);
     }
 
-    private void OnDateChanged(DateTime? newDate)
+    private async Task OnDateChanged(DateTime? newDate)
     {
         if (!newDate.HasValue)
             return;
 
         parameter.TransactionDate = newDate.Value;
-       
-        currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter.TransactionDate &&
+
+
+        currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
+
+        if (parameter.TransactionDate.HasValue == true)
+        {
+            currencyModel = currencyModel.Where(c => c.fdtmEffectiveFrom.Date <= parameter.TransactionDate &&
                                             c.fdtmEffectiveTo.Date >= parameter.TransactionDate);
+        }
+        
+
+        if (currencyModel.Any())
+        {
+            parameter.CurrencyKey = currencyModel.FirstOrDefault()!.fstrCurrencyKey;
+        }
     }
 
     private async Task OnFormSubmit()

@@ -1,0 +1,72 @@
+﻿.floating-select-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+
+    .floating-select-wrapper select {
+        width: 100%;
+        height: 40px;
+        padding: 9px 50px 12px 16px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background-color: #fff;
+        font-size: 17px;
+        transition: all 0.25s ease;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        outline: none;
+    }
+
+
+
+        .floating-select-wrapper select:focus {
+            border-color: #198754;
+            outline: none;
+        }
+
+
+    .floating-select-wrapper label {
+        position: absolute;
+        left: 12px;
+        top: 9px;
+        color: #6c757d;
+        background: #fff;
+        padding: 0 6px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+
+
+    .floating-select-wrapper.floating label {
+        top: -10px;
+        font-size: 0.80rem;
+        font-weight: 100;
+        color: #4f46e5;
+    }
+
+
+.validation-message {
+    font-size: 0.95rem;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.floating-select-wrapper select.is-invalid {
+    border-color: #dc3545;
+}
+
+.multiselect-dropdown {
+    position: absolute;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    margin-top: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
