@@ -1,4 +1,5 @@
 ﻿@page "/summaryreport"
+@using QuestPDF.Infrastructure
 
 @rendermode InteractiveServer
 
@@ -8,9 +9,10 @@
 @inject ICollectionService CollectionService
 @inject IReportService ReportService
 @inject UserSession User
+@inject IGeneratePDFService Pdf
 @inject IJSRuntime JS
 
-@attribute [Authorize(Policy = "Report.View")]
+@* @attribute [Authorize(Policy = "Report.View")] *@
 
 <div class="container-fluid">
 
@@ -65,51 +67,43 @@
 				<!-- Left Side -->
 				<div class="col-lg-6">
 
-					<label class="form-label fw-semibold">Campus</label>
+				
 
 					 <AuthorizeView Policy="AdminOnly" Context="authState">
                         <Authorized>
-                            <InputSelect class="form-select"
-										 TValue="string"
-                                         Value="@parameter.LocationKey"
-										 ValueChanged="OnLocationChanged"
-										 ValueExpression="@(() => parameter.LocationKey)" >
-
-								<option value="">ALL CAMPUSES</option>
-                                @foreach (var l in location!)
-                                {
-                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-                                }								
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+							<CustomInputSelect Label="Campus"
+											   TItem="LocationModel"
+											   Items="location"
+											   TValue="string"
+											   @bind-Value="parameter.LocationKey"
+											   ValueSelector="r => (string?)r.fstrLocationKey"
+											   TextSelector="r => r.fstrLocationName" />
                         </Authorized>
                         <NotAuthorized>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.LocationKey" disabled>
-                                @foreach (var l in location!)
-                                {
-                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+							<CustomInputSelect Label="Campus"
+											   TItem="LocationModel"
+											   Items="location"
+											   TValue="string"
+											   @bind-Value="parameter.LocationKey"
+											   ValueSelector="r => (string?)r.fstrLocationKey"
+											   TextSelector="r => r.fstrLocationName"
+											   Disabled="true"/>
                         </NotAuthorized>
                     </AuthorizeView>
 
 					<div class="row mt-3">
 						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Collection Date From</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.TransactionDateFrom"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.TransactionDateFrom)" />
+							<CustomInputDate Label="Collection Date From"
+											 @bind-Value="@parameter.TransactionDateFrom"
+											 DisableFutureDates="true" />
+							
 						</div>
 
 						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Collection Date To</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.TransactionDateTo"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.TransactionDateTo)" />
+							<CustomInputDate Label="Collection Date To"
+											 @bind-Value="@parameter.TransactionDateTo"
+											 DisableFutureDates="true" />
+							
 						</div>
 					</div>
 				</div>
@@ -162,92 +156,146 @@
 
 			<div>
 				@* <span class="text-success-emphasis">@summaryModels.GrandTotal.ToString("C2")</span> *@
-				
+				<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Export to PDF</button>
 			</div>
 		</div>
+
+		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5" id="exampleModalLabel">Add Note</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<label class="form-label mb-1 fw-bold text-black" for="vendor"> Notes </label>
+						<InputTextArea class="form-control" @bind-Value="Note" maxlength=500 style="min-height: 200px;" />
+					</div>
+					<div class="modal-footer">					
+						<button type="button" @onclick="PrintPDF" class="btn btn-primary">Export PDF</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 
 		<!--Auto scroll-->
 		<div id="autoScroll"></div>
 		<div class="Card border-1 rounded-0">
+
+			@* <div class="card-header">
+
+				<div>
+					<AuthorizeView Policy="AdminOnly" Context="authState">
+						<Authorized>
+
+							<div class="my-3 mt-5">
+								<div class="d-flex gap-3">
+									<CustomInputSelect Label="Select Conversion"
+													   TItem="CurrencyModel"
+													   Items="currency"
+													   TValue="decimal"
+													   OnSelectedValueChanged="OnSelectedValueChanged"
+													   @bind-Value="SelectedItems"
+													   ValueSelector="r => (decimal)r.fcurAmount!"
+													   TextSelector='r => $"{r.fstrCurrencyType} {r.fcurAmount.ToString("N")}"' />
+								</div>
+							</div>
+
+						</Authorized>
+					</AuthorizeView>
+				</div>
+			</div> *@
 			
-			<table class="table table-borderless table-responsive text-center align-middle">
-				<thead class="border-bottom">
-					<tr>
-						<th class="text-start">Type</th>
-
-						@foreach (var column in summaryModels.Columns)
-						{
-							<th class="text-end">@column</th>
-						}
-
-						<th class="text-end">Total</th>
-					</tr>
-				</thead>
-
-				<tbody>
-
-					@foreach (var row in summaryModels.Rows)
-					{
+			<div class="card-body">
+				<table class="table table-borderless table-responsive text-center align-middle">
+					<thead class="border-bottom">
 						<tr>
-							<td class="text-start">@row</td>
+							<th class="text-start">Type</th>
 
 							@foreach (var column in summaryModels.Columns)
 							{
-								var key = (row, column);
-								decimal value = 0;
-
-								if (showUSD)
-									summaryModels.CellTotalsUSD.TryGetValue(key, out value);
-								else
-									summaryModels.CellTotals.TryGetValue(key, out value);
-
-								<td class="text-end">@value.ToString("N2")</td>
+								<th class="text-end">@column</th>
 							}
 
-							@{
-								decimal rowTotal = 0;
-
-								if (showUSD)
-									summaryModels.RowTotalsUSD.TryGetValue(row, out rowTotal);
-								else
-									summaryModels.RowTotals.TryGetValue(row, out rowTotal);
-							}
-
-							<td class="text-end">@rowTotal.ToString("N2")</td>
+							<th class="text-end">Total</th>
 						</tr>
-					}
+					</thead>
 
-				</tbody>
-
-				<tfoot>
-					<tr>
-						<th class="text-start">Total</th>
-
-						@foreach (var column in summaryModels.Columns)
+					<tbody>
+						@if (summaryModels.Rows.Any())
 						{
-							decimal colTotal = 0;
+							@foreach (var row in summaryModels.Rows)
+							{
+								<tr>
+									<td class="text-start">@row</td>
 
-							if (showUSD)
-								summaryModels.ColumnTotalsUSD.TryGetValue(column, out colTotal);
-							else
-								summaryModels.ColumnTotals.TryGetValue(column, out colTotal);
+									@foreach (var column in summaryModels.Columns)
+									{
+										var key = (row, column);
+										decimal value = 0;
 
-							<th class="text-end">@colTotal.ToString("N2")</th>
+										if (showUSD)
+											summaryModels.CellTotalsUSD.TryGetValue(key, out value);
+										else
+											summaryModels.CellTotals.TryGetValue(key, out value);
+
+										<td class="text-end">@value.ToString("N2")</td>
+									}
+
+									@{
+										decimal rowTotal = 0;
+
+										if (showUSD)
+											summaryModels.RowTotalsUSD.TryGetValue(row, out rowTotal);
+										else
+											summaryModels.RowTotals.TryGetValue(row, out rowTotal);
+									}
+
+									<td class="text-end">@rowTotal.ToString("N2")</td>
+								</tr>
+							}
+
+						}
+						else
+						{
+							<tr>
+								<td colspan="2" class="text-danger text-center">No Data Found</td>
+							</tr>
 						}
 
-						<th class="text-end">
-							@(showUSD
-							? summaryModels.GrandTotalUSD.ToString("N2")
-							: summaryModels.GrandTotal.ToString("N2"))
-						</th>
-					</tr>
-				</tfoot>
-			</table>
+					</tbody>
+
+					<tfoot>
+						<tr>
+							<th class="text-start">Total</th>
+
+							@foreach (var column in summaryModels.Columns)
+							{
+								decimal colTotal = 0;
+
+								if (showUSD)
+									summaryModels.ColumnTotalsUSD.TryGetValue(column, out colTotal);
+								else
+									summaryModels.ColumnTotals.TryGetValue(column, out colTotal);
+
+								<th class="text-end">@colTotal.ToString("N2")</th>
+							}
+
+							<th class="text-end">
+								@(showUSD
+																? summaryModels.GrandTotalUSD.ToString("N2")
+																: summaryModels.GrandTotal.ToString("N2"))
+							</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
 		</div>
 
 
 		<!--Conversion-->
-		<div class="section-header d-flex justify-content-between align-items-center mt-5 mb-5">
+		<div class="section-header d-flex justify-content-between align-items-center mt-5">
 
 			<div class="d-flex align-items-center">
 				<img width="50" height="50" src="https://img.icons8.com/3d-fluency/94/transaction.png" class="me-2" />
@@ -256,23 +304,33 @@
 					<span class="fw-semibold">Conversion</span>
 					<small class="lh-1 small-text">Convert local currency to a different currency</small>
 				</div>
-			</div>
-
-			<div>
+			</div>			
+		</div>
+		<div class="card mb-5">
+			<div class="card-body bg-white">
 				<AuthorizeView Policy="AdminOnly" Context="authState">
 					<Authorized>
 
-						<div class="my-3 mt-5">
-							<div class="d-flex gap-3">
-								<div class="form-check form-switch">
-									<input class="form-check-input" type="checkbox" @bind="showUSD">
-									<label class="form-check-label">Convert to USD</label>
-								</div>
+						<div class="row my-3 ">
+							<div class="col-md-3">
+								<CustomInputSelect Label=""
+												   TItem="CurrencyModel"
+												   Items="currency"
+												   TValue="CurrencyModel"												
+												   @bind-Value="SelectedItems"
+												   ValueSelector="r => r"
+												   TextSelector='r => $"{r.fstrCurrencyType} {r.fcurAmount.ToString("N")}"' />
+							
+							</div>
+							<div class="col-md-3">
+								<button class="btn btn-primary" type="button" @onclick="OnSelectedValueChanged">Convert</button>
 							</div>
 						</div>
+
 					</Authorized>
 				</AuthorizeView>
 			</div>
+
 		</div>
 	
 
@@ -284,22 +342,18 @@
 
 	private SummaryReportDto parameter = new();
 	private IEnumerable<LocationModel>? location = [];
-	private IEnumerable<CurrencyModel>? currency = [];
+	private List<CurrencyModel>? currency = [];
 
 	private PivotSummaryModel summaryModels = new();
 
-	private CurrencyModel currencySelected = new();
+	private string LocationName = "";
+	private string Note = "";
 
 	private List<RadioButtonModel> Options = new();
 
 	private bool showUSD = false;
+	private CurrencyModel? SelectedItems;
 
-	private IEnumerable<RadioButtonModel> FilteredOptions =>
-		string.IsNullOrEmpty(LocationKey)
-			? Options.Where(o => o.Value == "allcampus")      // Only All Campus
-			: Options.Where(o => o.Value != "allcampus");     // Everything except All Campus
-
-	private bool submitting = false;
 
 	private string _selectedOption = "paymentlist";
 	private string SelectedOption
@@ -311,9 +365,52 @@
 			{
 				_selectedOption = value;
 				_ = OnOptionClicked(value);
+
 			}
 		}
 	}
+
+	private async Task OnSelectedValueChanged()
+	{
+		if (parameter.TransactionDateFrom.HasValue && parameter.TransactionDateTo.HasValue)
+		{
+			if (SelectedItems is not null)
+			{
+				showUSD = true;
+				if (SelectedOption == "paymentlist")
+				{
+					summaryModels = await ReportService.GenerateSummaryReport(parameter, true, false, SelectedItems.fcurAmount);
+				}
+				if (SelectedOption == "paymentsummary")
+				{
+					summaryModels = await ReportService.GenerateSummaryReport(parameter, true, true, SelectedItems.fcurAmount);
+				}
+				if (SelectedOption == "collectionlist")
+				{
+					summaryModels = await ReportService.GenerateSummaryReport(parameter, false, false, SelectedItems.fcurAmount);
+				}
+				if (SelectedOption == "collectionsummary")
+				{
+					summaryModels = await ReportService.GenerateSummaryReport(parameter, false, true, SelectedItems.fcurAmount);
+				}
+			}
+		}
+		else
+		{
+			ToastService.ShowError("Please generate report first");
+		}
+
+
+	}
+
+	private IEnumerable<RadioButtonModel> FilteredOptions =>
+		string.IsNullOrEmpty(LocationKey)
+			? Options.Where(o => o.Value == "allcampus")      // Only All Campus
+			: Options.Where(o => o.Value != "allcampus");     // Everything except All Campus
+
+	private bool submitting = false;
+
+
 
 	private string  CurrencyKey = "";
 	private decimal ConvertedAmount = 0;
@@ -340,6 +437,10 @@
 
 	protected override async Task OnInitializedAsync()
 	{	
+		parameter = new()
+		{
+			LocationKey = User.LocationKey
+		};
 		await OnLoad();
 	}
 
@@ -352,10 +453,43 @@
 		}
 	}
 
+	private async Task PrintPDF()
+	{
+		QuestPDF.Settings.License = LicenseType.Community;
+
+		if (!string.IsNullOrEmpty(Note))
+		{
+			var pdfBytes = Pdf.GeneratePdf(summaryModels, User, LocationName, Note);
+			var base64 = Convert.ToBase64String(pdfBytes);
+			await JS.InvokeVoidAsync("downloadFile", "summary-report.pdf", base64);
+			await JS.InvokeVoidAsync("closeModal", "exampleModal");
+			Note = "";
+			ToastService.ShowError("PDF downloaded successfully");
+		}
+		else
+		{
+			ToastService.ShowError("A Note is required before proceeding");
+		}
+
+
+	}
+
 	private async Task OnLoad()
 	{
-		currency = await CurrencyService.SelectCurrency(null,User.LocationKey, active: true);
-		currency = currency.Where(x => x.fdtmEffectiveFrom <= DateTime.Today && x.fdtmEffectiveTo >= DateTime.Today);
+		
+
+		currency = (await CurrencyService.SelectCurrency(null,User.LocationKey, active: true)).ToList();
+		// currency.Insert(0, new CurrencyModel
+		// {
+		// 	fstrCurrencyKey = "",
+		// 	fstrCurrencyType = "Select Currency",
+		// 	fcurAmount = 1
+		// });
+
+
+		location = await LocationService.SelectLocation(null, true);
+		LocationName = location.FirstOrDefault(l => l.fstrLocationKey == User.LocationKey)!.fstrLocationName!;
+
 
 		Options = new()
 		{
@@ -389,25 +523,13 @@
 			},
 			new RadioButtonModel
 			{
-				Value = "alltotals",
-				Title = "Only Totals",
-				Description = "Show totals for each month",
-				Icon = "bi bi-payment"
-			},
-			new RadioButtonModel
-			{
 				Value = "allcampus",
 				Title = "Monthly Summary for all Campuses",
 				Description = "Show monthly totals for all campuses",
 				Icon = "bi bi-calendar3"
 			}
 		};
-		parameter = new()
-			{
-				LocationKey = User.LocationKey
-			};
-
-		location = await LocationService.SelectLocation(null, true);
+		
 
 	}
 
@@ -444,34 +566,6 @@
 		return Task.CompletedTask;
 	}
 
-	private Task OnCurrencyChanged(string value)
-	{
-		CurrencyKey = value;
-
-		// if (paymentTypeSummary.GrandTotal == 0)
-		// {
-		// 	ToastService.ShowError("Cannot convert a zero amount");
-		// }
-		// else
-		// {
-		// 	decimal Amount = 0;
-
-		// 	if (CurrencyKey == "")
-		// 	{
-		// 		ConvertedAmount = paymentTypeSummary.GrandTotal;
-		// 	}
-		// 	else
-		// 	{
-		// 		Amount = currency!.FirstOrDefault(c => c.fstrCurrencyKey == CurrencyKey && c.fdtmEffectiveFrom <= DateTime.Today && c.fdtmEffectiveTo >= DateTime.Today)!.fcurAmount;
-		// 		ConvertedAmount = paymentTypeSummary.GrandTotal / Amount;
-		// 	}
-
-		// }	
-
-
-		 return Task.CompletedTask;
-	}
-
 	private string Format(decimal value)
 	{
 		if (value < 0)
@@ -498,19 +592,6 @@
 		{
 			summaryModels = await ReportService.GenerateSummaryReport(parameter, true, false);
 
-			// paymentTypeSummary = await ReportService.GeneratePaymentType(parameter!);
-			// paymentSummary = await ReportService.GenerateMonthlySummaryByPaymentType(parameter!);			
-
-			// collectionTypeSummary = await ReportService.GenerateCollectionType(parameter!);
-			// collectionSummary = await ReportService.GenerateMonthlySummaryByCollectionType(parameter!);
-
-			// locationSummary = await ReportService.GenerateMonthlySummaryByLocation(parameter!);
-
-			// if (paymentTypeSummary.GrandTotal == 0 || !paymentSummary.Months.Any() || collectionTypeSummary.GrandTotal == 0|| !collectionSummary.Months.Any() || !locationSummary.Months.Any())
-			// {
-			// 	ToastService.ShowWarning("No data found");
-			// }
-
 			await JS.InvokeVoidAsync("scrollToElement", "autoScroll");
 
 		}
@@ -526,15 +607,7 @@
 
 	private void ResetProperties()
 	{
-		// paymentTypeSummary = new();
-		// collectionTypeSummary = new();
-
-		// paymentSummary = new();
-		// collectionSummary = new();
-		// locationSummary = new();
 		summaryModels = new();
-
-		// Options = new();
 		submitting = false;
 	}
 }

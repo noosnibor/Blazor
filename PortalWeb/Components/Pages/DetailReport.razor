@@ -66,87 +66,76 @@
 				<!-- Left Side -->
 				<div class="col-lg-6">
 
-					<label class="form-label fw-semibold">Campus</label>					
+								
 					 <AuthorizeView Policy="AdminOnly" Context="authState">
                         <Authorized>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.LocationKey">
-                                @foreach (var l in location!)
-                                {
-                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+							<CustomInputSelect Label="Campus"
+											   TItem="LocationModel"
+											   Items="location"
+											   TValue="string"
+											   @bind-Value="parameter.LocationKey"
+											   ValueSelector="r => (string?)r.fstrLocationKey"
+											   TextSelector="r => r.fstrLocationName" />
                         </Authorized>
                         <NotAuthorized>
-                            <InputSelect class="form-select"
-                                         @bind-Value="parameter.LocationKey" disabled>
-                                @foreach (var l in location!)
-                                {
-                                    <option value="@l.fstrLocationKey">@l.fstrLocationName</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => parameter.LocationKey)" />
+							<CustomInputSelect Label="Campus"
+											   TItem="LocationModel"
+											   Items="location"
+											   TValue="string"
+											   @bind-Value="parameter.LocationKey"
+											   ValueSelector="r => (string?)r.fstrLocationKey"
+											   TextSelector="r => r.fstrLocationName"
+											   Disabled="true"/>
                         </NotAuthorized>
                     </AuthorizeView>
 
 					<div class="row mt-4 mb-3">
 						<div class="col-md-6">
-							<label class="form-label fw-semibold">Collection Date From</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.From"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.From)" />
+							<CustomInputDate Label="Collection Date From"
+											 @bind-Value="@parameter.From"
+											 DisableFutureDates="true" />
+						
 						</div>
 
 						<div class="col-md-6">
-							<label class="form-label fw-semibold">Collection Date To</label>
-							<InputDate class="form-control"
-									   @bind-Value="parameter.To"
-									   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-							<ValidationMessage For="@(() => parameter.To)" />
+							<CustomInputDate Label="Collection Date To"
+											 @bind-Value="@parameter.To"
+											 DisableFutureDates="true" />
+							
 						</div>
 					</div>
 
 
 					<div class="row">
 						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">First Name</label>
-							<InputText class="form-control"
-									   @bind-Value="parameter.Firstname"
-									   placeholder="Enter First Name" />
-							<ValidationMessage For="@(() => parameter.Firstname)" />
+							<CustomInputText Placeholder="First Name" Type="text" @bind-Value="parameter.Firstname" />
+							
 						</div>
 
 						<div class="col-md-6 mb-3">
-							<label class="form-label fw-semibold">Last Name</label>
-							<InputText class="form-control"
-									   @bind-Value="parameter.Lastname"
-									   placeholder="Enter Last Name" />
-							<ValidationMessage For="@(() => parameter.Lastname)" />
+							<CustomInputText Placeholder="Last Name" Type="text" @bind-Value="parameter.Lastname" />
+							
 						</div>
 					</div>
 
-					<label class="form-label fw-semibold">Collection Type</label>
-					<InputSelect class="form-select mb-3"
-								 @bind-Value="parameter.CollectionTypeKey">
-						@foreach (var c in MemoryStoredData.GetCollectionType())
-						{
-							<option value="@c.flngCollectionTypeKey">@c.fstrCollectionType</option>
-						}
-					</InputSelect>
-					<ValidationMessage For="@(() => parameter.CollectionTypeKey)" />
+					<CustomInputSelect Label="Collection Type"
+									   TItem="CollectionType"
+									   Items="MemoryStoredData.GetCollectionType()"
+									   TValue="int?"
+									   @bind-Value="parameter.CollectionTypeKey"
+									   ValueSelector="r => (int?)r.flngCollectionTypeKey"
+									   TextSelector="r => r.fstrCollectionType" />
 
-					<label class="form-label fw-semibold">Payment Type</label>
-					<InputSelect class="form-select col-sm-9"
-								 @bind-Value="parameter.PaymentTypeKey">
-						<option value="0">Select Payment Type</option>
-						@foreach (var p in MemoryStoredData.GetPaymentType())
-						{
-							<option value="@p.flngPaymentKey">@p.fstrPaymentType</option>
-						}
-					</InputSelect>
-					<ValidationMessage For="@(() => parameter.PaymentTypeKey)" />
+			
+
+					<CustomInputSelect Label="Payment Type"
+									   TItem="PaymentType"
+									   Items="MemoryStoredData.GetPaymentType()"
+									   TValue="int?"
+									   @bind-Value="parameter.PaymentTypeKey"
+									   ValueSelector="r => (int?)r.flngPaymentKey"
+									   TextSelector="r => r.fstrPaymentType" />
+					
 				</div>
 
 			</div>

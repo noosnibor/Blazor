@@ -19,7 +19,7 @@
     width: 350px;
     /* 100%; MATCH INPUT WIDTH */
     min-width: 260px; /* Prevent too narrow */
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 20px;
     z-index: 1050;
     animation: fadeIn 0.18s ease-out;
@@ -137,7 +137,7 @@ input.is-valid ~ label {
     left: 12px;
     top: 9px;
     font-size: 0.95rem;
-    color: var(--bs-secondary-color);
+    color: #ccc;
     pointer-events: none;
     transition: all 0.2s ease;
     background: var(--bs-body-bg);

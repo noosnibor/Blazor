@@ -19,14 +19,6 @@ builder.Services.AddRazorComponents()
 builder.Environment.IsDevelopment();
 builder.Environment.IsProduction();
 
-//Connection String
-//builder.Services.AddScoped<IDbConnection>(sp =>
-//{
-//    var configuration = sp.GetRequiredService<IConfiguration>();
-//    var connectionString = configuration.GetConnectionString("DefaultConnection");
-//    return new SqlConnection(connectionString);
-//});
-
 // Dependency Injection
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
@@ -39,6 +31,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGeneratePDFService, GeneratePDFService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<UserSession>();

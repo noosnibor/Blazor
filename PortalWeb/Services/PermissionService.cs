@@ -77,7 +77,7 @@ public class PermissionService(ISqlDataAccess sqlDataAccess) : IPermissionServic
             int result = await sqlDataAccess.ExecuteAsync("dbo.spAddPermission", CommandType.StoredProcedure, parameters);
 
             // Validate result
-            if (result == 1)
+            if (result >= 1)
                 return new() { Type = ToastType.Success, Message = "Permission was added successfully" };
             else
                 return new() { Type = ToastType.Warning, Message = "Unable to add permission" };

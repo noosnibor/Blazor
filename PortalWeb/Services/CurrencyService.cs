@@ -89,7 +89,7 @@ public class CurrencyService(ISqlDataAccess sqlDataAccess) : ICurrencyService
             parameters);
 
 
-            if (result == 1)
+            if (result >= 1)
             {
                 return insert
                     ? new() { Type = ToastType.Success, Message = "Currency was added successfully" }

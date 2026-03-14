@@ -1,17 +1,35 @@
 ﻿@typeparam TValue
 @inherits InputBase<TValue>
 
-<div class="wrapper @(IsFocus ? "focused" : "")">
+<div class="wrapper @(IsFocus && !Disabled ? "focused" : "")">
 
-    <input class="wrapper-input @CssClass"
-           type="@InputType"
-           placeholder=" "
-           value="@BindConverter.FormatValue(CurrentValue)"
-           minlength="@MinLength"
-           maxlength="@MaxLength"
-           @oninput="OnInputChanged"
-           @onfocus="() => IsFocus = true"
-           @onblur="HandleBlur" />
+    @if (Multiline)
+    {
+        <textarea class="wrapper-input @CssClass"
+                  rows="@Rows"
+                  placeholder=" "
+                  value="@BindConverter.FormatValue(CurrentValue)"
+                  minlength="@MinLength"
+                  maxlength="@MaxLength"
+                  disabled="@Disabled"
+                  @oninput="Disabled ? null : OnInputChanged"
+                  @onfocus="Disabled ? null : () => IsFocus = true"
+                  @onblur="HandleBlur">
+        </textarea>
+    }
+    else
+    {
+        <input class="wrapper-input @CssClass"
+               type="@InputType"
+               placeholder=" "
+               value="@BindConverter.FormatValue(CurrentValue)"
+               minlength="@MinLength"
+               maxlength="@MaxLength"
+               disabled="@Disabled"
+               @oninput="Disabled ? null : OnInputChanged"
+               @onfocus="Disabled ? null : () => IsFocus = true"
+               @onblur="HandleBlur" />
+    }
 
     <label>@Placeholder</label>
 
@@ -24,7 +42,7 @@
             </span>
         }
 
-        @if (IsPassword)
+        @if (IsPassword && !Multiline)
         {
             <button type="button"
                     class="toggle"
@@ -49,6 +67,13 @@
 
     [Parameter]
     public int? MaxLength { get; set; }
+    [Parameter]
+    public bool Disabled { get; set; }
+    [Parameter]
+    public bool Multiline { get; set; } = false;
+
+    [Parameter]
+    public int Rows { get; set; } = 3;
 
     private bool IsFocus = false;
     private bool CanShowPassword = false;

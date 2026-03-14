@@ -31,6 +31,17 @@
     font-weight: 400;
 }
 
+.wrapper textarea.wrapper-input {
+    min-height: 100px;
+    resize: vertical;
+   
+}
+
+    .wrapper textarea.wrapper-input ~ label {
+        top: 10px;
+    }
+
+
 .wrapper-input {
     border: none;
     outline: none;

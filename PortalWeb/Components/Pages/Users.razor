@@ -9,7 +9,7 @@
 @inject UserSession User
 @inject IJSRuntime JS
 
-@attribute [Authorize(Policy = "AdminOnly")]
+@* @attribute [Authorize(Policy = "AdminOnly")] *@
 
 <!--Auto scroll-->
 <div id="autoScroll"></div>
@@ -67,48 +67,52 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">First Name</label>
+                            <CustomInputText Placeholder="First Name" Type="text" @bind-Value="parameter.fstrFirstname" />
+                          @*   <label class="form-label fw-semibold">First Name</label>
                            
                             <InputText class="form-control"
                                        @bind-Value="parameter.fstrFirstname" placeholder="Enter a first name" />
-                            <ValidationMessage For="@(() => parameter.fstrFirstname)" />
+                            <ValidationMessage For="@(() => parameter.fstrFirstname)" /> *@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Last Name</label>
+                            <CustomInputText Placeholder="Last Name" Type="text" @bind-Value="parameter.fstrLastname" />
+                            @* <label class="form-label fw-semibold">Last Name</label>
                             <div class="col-sm-9">
                                 <InputText class="form-control"
                                            @bind-Value="parameter.fstrLastname" placeholder="Enter a last name" />
-                                <ValidationMessage For="@(() => parameter.fstrLastname)" />
-                            </div>
+                                <ValidationMessage For="@(() => parameter.fstrLastname)" /> *@
+                            @* </div> *@
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Username</label>
+                        <CustomInputText Placeholder="Username" Type="text" @bind-Value="parameter.fstrUsername" />
+                           @*  <label class="form-label fw-semibold">Username</label>
                             <InputText class="form-control"
                                        @bind-Value="parameter.fstrUsername" placeholder="Enter a user name" />
-                            <ValidationMessage For="@(() => parameter.fstrUsername)" />
+                            <ValidationMessage For="@(() => parameter.fstrUsername)" /> *@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Password</label>
+                            <CustomInputText Placeholder="Password" Type="text" @bind-Value="parameter.fstrPassword" Disabled="true" />
+                            @* <label class="form-label fw-semibold">Password</label>
                             <div class="col-sm-9">
                                 <InputText class="form-control"
                                            @bind-Value="parameter.fstrPassword"
                                            disabled />
                                 <ValidationMessage For="@(() => parameter.fstrPassword)" />
-                            </div>
+                            </div> *@
                         </div>
                     </div>
 
-                    <label class="form-label fw-semibold">Email Address</label>
-                    <div class="col-12">
+                    <CustomInputText Placeholder="Email Address" Type="text" @bind-Value="parameter.fstrEmailAddress" />
+                    @* <div class="col-12">
                         <InputText class="form-control"
                                    @bind-Value="parameter.fstrEmailAddress" placeholder="Enter an email address" />
                         <ValidationMessage For="@(() => parameter.fstrEmailAddress)" />
-                    </div>
+                    </div> *@
                    
                 </div>
 
@@ -116,7 +120,15 @@
                 <div class="col-lg-6">
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Role</label>
+                        <CustomInputSelect Label="Role"
+                                           TItem="Roles"
+                                           Items="MemoryStoredData.GetRoles()"
+                                           TValue="int?"
+                                           @bind-Value="parameter.flngRoleKey"
+                                           ValueSelector="r => (int?)r.flngRoleKey"
+                                           TextSelector="r => r.fstrRoleName" />
+
+                       @*  <label class="form-label fw-semibold">Role</label>
                         <InputSelect class="form-select"
                                      @bind-Value="parameter.flngRoleKey"
                                      TValue="int?">
@@ -126,12 +138,22 @@
                                 <option value="@r.flngRoleKey">@r.fstrRoleName</option>
                             }
                         </InputSelect>
-                        <ValidationMessage For="@(() => parameter.flngRoleKey)" />
+                        <ValidationMessage For="@(() => parameter.flngRoleKey)" /> *@
                     </div>
 
-                    <div class="row">
-                          <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Campus</label>
+                    <div class="row mb-0">
+                          <div class="col-md-6 ">
+
+                            <CustomInputSelect Label="Campus"
+                                               TItem="LocationModel"
+                                               Items="locationModel"
+                                               TValue="string"
+                                               OnSelectedValueChanged="OnSelectedValueChanged"
+                                               @bind-Value="parameter.fstrLocationKey"
+                                               ValueSelector="r => (string?)r.fstrLocationKey"
+                                               TextSelector="r => r.fstrLocationName" />
+
+                           @*  <label class="form-label fw-semibold">Campus</label>
                             <InputSelect TValue="string"
                                          class="form-select"
                                          Value="parameter.fstrLocationKey"
@@ -149,11 +171,21 @@
 
                             </InputSelect>
 
-                            <ValidationMessage For="@(() => parameter.fstrLocationKey)" />
+                            <ValidationMessage For="@(() => parameter.fstrLocationKey)" /> *@
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Currency</label>
+                        <div class="col-md-6">
+                            <CustomInputSelect Label="Currency"
+                                               TItem="CurrencyModel"
+                                               Items="currencyModel"
+                                               TValue="string"
+                                               OnSelectedValueChanged="OnSelectedValueChanged"
+                                               @bind-Value="parameter.fstrCurrencyKey"
+                                               ValueSelector="r => (string?)r.fstrCurrencyKey"
+                                               TextSelector="r => r.fstrCurrencyType"
+                                               Disabled="true"/>
+
+                           @*  <label class="form-label fw-semibold">Currency</label>
                             <InputSelect class="form-select"
                                          @bind-Value="parameter.fstrCurrencyKey" disabled>
                                 <option value="">Select currency</option>
@@ -162,27 +194,34 @@
                                     <option value="@c.fstrCurrencyKey">@c.fstrCurrencyType</option>
                                 }
                             </InputSelect>
-                            <ValidationMessage For="@(() => parameter.fstrCurrencyKey)" />
+                            <ValidationMessage For="@(() => parameter.fstrCurrencyKey)" /> *@
                         </div>
 
                       
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Effective From</label>
+                    <div class="row mb-3">
+                        <div class="col-md-6 ">
+                            <CustomInputDate Label="Effective From"
+                                             @bind-Value="@parameter.fdtmStart"
+                                             DisableFutureDates="true" />
+
+                          @*   <label class="form-label fw-semibold">Effective From</label>
                             <div class="col-sm-9">
                                 <InputDate class="form-control"
                                            @bind-Value="parameter.fdtmStart" />
                                 <ValidationMessage For="@(() => parameter.fdtmStart)" />
-                            </div>
+                            </div> *@
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Effective To</label>
+                        <div class="col-md-6 ">
+                            <CustomInputDate Label="Effective To"
+                                             @bind-Value="@parameter.fdtmEnd"
+                                             DisableFutureDates="true" />
+                           @*  <label class="form-label fw-semibold">Effective To</label>
                             <InputDate class="form-control"
                                        @bind-Value="parameter.fdtmEnd" />
-                            <ValidationMessage For="@(() => parameter.fdtmEnd)" />
+                            <ValidationMessage For="@(() => parameter.fdtmEnd)" /> *@
                         </div>
                     </div>
 
@@ -289,8 +328,8 @@
 @code {
 
     private UserDto parameter = new();
-    private IEnumerable<LocationModel> locationModel = [];
-    private IEnumerable<CurrencyModel> currencyModel = [];
+    private List<LocationModel> locationModel = [];
+    private List<CurrencyModel> currencyModel = [];
     private IEnumerable<UserModel> userModel = [];
     private bool submitting = false;
     private bool canUpdate = false;
@@ -307,8 +346,18 @@
     {
         try
         {
-            currencyModel = await CurrencyService.SelectCurrency(null, User.LocationKey, true) ?? [];
-            locationModel = await LocationService.SelectLocation(null, true) ?? [];
+            currencyModel = (await CurrencyService.SelectCurrency(null, User.LocationKey, true)).ToList() ?? [];
+            currencyModel.Insert(0, new CurrencyModel
+            {
+                fstrCurrencyKey = "",
+                fstrCurrencyType = ""
+            });
+            locationModel = (await LocationService.SelectLocation(null, true)).ToList() ?? [];
+            locationModel.Insert(0, new LocationModel
+            {
+                fstrLocationKey = "",
+                fstrLocationName = ""
+            });
             userModel = await UserService.SelectUser(null, null, null);
         }
         catch (Exception ex)
@@ -324,7 +373,7 @@
         try
         {
             parameter.fstrLocationKey = value;
-            currencyModel = await CurrencyService.SelectCurrency(null, value, true) ?? [];
+            currencyModel = (await CurrencyService.SelectCurrency(null, value, true)).ToList() ?? [];
             parameter.fstrCurrencyKey = currencyModel.FirstOrDefault(x => x.fcurAmount == 1)?.fstrCurrencyKey;
 
             await InvokeAsync(StateHasChanged);
@@ -356,7 +405,7 @@
             fstrPassword = user.fstrPassword!
         };
 
-        currencyModel = await CurrencyService.SelectCurrency(null, user.fstrLocationKey!, true) ?? [];
+        currencyModel = (await CurrencyService.SelectCurrency(null, user.fstrLocationKey!, true)).ToList() ?? [];
         parameter.fstrCurrencyKey = currencyModel.FirstOrDefault(x => x.fcurAmount == 1)?.fstrCurrencyKey;
 
         await JS.InvokeVoidAsync("scrollToElement", "autoScroll");

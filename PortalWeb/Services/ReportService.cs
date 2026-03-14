@@ -15,7 +15,7 @@ public interface IReportService
     Task<MonthlySummary> GenerateMonthlySummaryByLocation(SummaryReportDto parameters);
     Task<MonthlySummary> GenerateMonthlySummaryByPaymentType(SummaryReportDto parameters);
     Task<PaymentTypeSummary> GeneratePaymentType(SummaryReportDto parameters);
-    Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month);
+    Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month, decimal rate = 1);
 }
 
 public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locationService, ICurrencyService currencyService) : IReportService
@@ -346,27 +346,14 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
     }
 
 
-    public async Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month)
+    public async Task<PivotSummaryModel> GenerateSummaryReport(SummaryReportDto parameters, bool type, bool month, decimal rate = 1)
     {
         // Pull data from database
         var results = await SummaryReport(parameters);
 
         // Check if any report was return
         if (!results.Any())
-            return new PivotSummaryModel();
-
-        // Get exchange rate
-        //var exchangeRates = new Dictionary<string, decimal>
-        //{
-        //    { "USD", 1m },
-        //    { "JMD", 150m },
-        //    { "CAN", 0.74m }
-        //};
-        var currencies = await currencyService.SelectCurrency("USD", "HQ", true) ?? [];
-
-        currencies = [.. currencies.Where(x => x.fdtmEffectiveFrom <= parameters.TransactionDateFrom && x.fdtmEffectiveTo >= parameters.TransactionDateTo)];
-
-        Dictionary<string, decimal> exchangeRates = currencies!.ToDictionary(c => c.fstrCurrencyKey!, c => c.fcurAmount)!;
+            return new PivotSummaryModel();     
 
         // Initialize columns and rows
         var columns = new HashSet<string>();
@@ -420,8 +407,6 @@ public class ReportService(ISqlDataAccess sqlDataAccess, ILocationService locati
                 ? cVal + value
                 : value;
 
-            // Convert to USD
-            var rate = exchangeRates.ContainsKey(currency) ? exchangeRates[currency] : 1;
 
             decimal usdValue = value / rate;
 

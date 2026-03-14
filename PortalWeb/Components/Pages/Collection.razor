@@ -170,7 +170,7 @@
                                                TValue="string"
                                                @bind-Value="parameter.CurrencyKey"
                                                ValueSelector="r => (string)r.fstrCurrencyKey!"
-                                               TextSelector="r => r.fstrCurrencyType" />
+                                               TextSelector='r => $"{r.fstrCurrencyType} {r.fcurAmount.ToString("N")}"' />
                         </div>
 
                         <div class="col-md-6">
@@ -335,7 +335,7 @@
                     SearchPredicate="SearchCollection"
                     ColumnCount="8"
                     SumSelector="@(s => s.fcurLocalAmount)"
-                    SumColumnIndex="7"
+                    SumColumnIndex="6"
                     SumLabel="Total"
         >
 

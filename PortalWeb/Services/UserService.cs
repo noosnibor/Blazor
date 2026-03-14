@@ -79,7 +79,7 @@ public class UserService(ISqlDataAccess sqlDataAccess) : IUserService
             parameters);
 
 
-            if (result == 1)
+            if (result >= 1)
             {
                 return insert
                     ? new() { Type = ToastType.Success, Message = "User was added successfully" }

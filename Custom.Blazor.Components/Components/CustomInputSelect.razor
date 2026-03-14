@@ -6,6 +6,7 @@
 
     <select class="form-select @ValidationClass"
             value="@CurrentValueAsString"
+            disabled="@Disabled"
             @onchange="HandleChange"
             @onfocus="() => IsFocused = true"
             @onblur="() => IsFocused = false">
@@ -15,11 +16,10 @@
             @foreach (var item in Items)
             {
                 var value = ValueSelector(item);
+                var key = GetOrCreateKey(value);
                 var text = TextSelector(item);
 
-                <option value="@FormatValueAsString(value)">
-                    @text
-                </option>
+                <option value="@key">@text</option>
             }
         }
 
@@ -27,14 +27,12 @@
 
     <label>@Label</label>
 
-@*     <ValidationMessage For="ValueExpression" class="validation-message" /> *@
-
 </div>
 
 @code {
 
     /* ============================= */
-    /* PARAMETERS */
+    /* PARAMETERS                    */
     /* ============================= */
 
     [Parameter] public string Label { get; set; }
@@ -45,10 +43,54 @@
 
     [Parameter] public Func<TItem, string> TextSelector { get; set; }
 
-    /* NEW EVENT */
+    [Parameter] public bool Disabled { get; set; }
+
     [Parameter] public EventCallback<TValue> OnSelectedValueChanged { get; set; }
 
+    /* ============================= */
+    /* STATE                         */
+    /* ============================= */
+
     private bool IsFocused { get; set; }
+
+    private Dictionary<string, TValue> _lookup = new();
+    private Dictionary<TValue, string> _reverseLookup = new();
+
+    /* ============================= */
+    /* INITIALIZE LOOKUP             */
+    /* ============================= */
+
+    protected override void OnParametersSet()
+    {
+        _lookup.Clear();
+        _reverseLookup.Clear();
+
+        if (Items != null)
+        {
+            foreach (var item in Items)
+            {
+                var value = ValueSelector(item);
+                GetOrCreateKey(value);
+            }
+        }
+    }
+
+    private string GetOrCreateKey(TValue value)
+    {
+        if (_reverseLookup.TryGetValue(value, out var existing))
+            return existing;
+
+        var key = Guid.NewGuid().ToString();
+
+        _lookup[key] = value;
+        _reverseLookup[value] = key;
+
+        return key;
+    }
+
+    /* ============================= */
+    /* UI STATE                      */
+    /* ============================= */
 
     private bool HasValue =>
         !EqualityComparer<TValue>.Default.Equals(CurrentValue, default);
@@ -60,44 +102,52 @@
             ? "is-invalid"
             : "";
 
+    /* ============================= */
+    /* CHANGE HANDLER                */
+    /* ============================= */
+
     private async Task HandleChange(ChangeEventArgs e)
     {
-        CurrentValueAsString = e.Value?.ToString();
+        var key = e.Value?.ToString();
 
-        // Notify EditForm binding
-        await ValueChanged.InvokeAsync(CurrentValue);
-
-        // Trigger custom event
-        if (OnSelectedValueChanged.HasDelegate)
+        if (key != null && _lookup.TryGetValue(key, out var selected))
         {
-            await OnSelectedValueChanged.InvokeAsync(CurrentValue);
+            CurrentValue = selected;
+
+            if (OnSelectedValueChanged.HasDelegate)
+                await OnSelectedValueChanged.InvokeAsync(selected);
         }
     }
 
+    /* ============================= */
+    /* STARTUP VALUE SUPPORT         */
+    /* ============================= */
+
+    protected override string FormatValueAsString(TValue value)
+    {
+        if (value != null && _reverseLookup.TryGetValue(value, out var key))
+        {
+            return key;
+        }
+
+        return string.Empty;
+    }
+
+    /* ============================= */
+    /* PARSE VALUE                   */
+    /* ============================= */
+
     protected override bool TryParseValueFromString(string value, out TValue result, out string validationErrorMessage)
     {
-        try
+        if (_lookup.TryGetValue(value, out var selected))
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                result = default;
-                validationErrorMessage = null;
-                return true;
-            }
-
-            var targetType = Nullable.GetUnderlyingType(typeof(TValue)) ?? typeof(TValue);
-
-            result = (TValue)Convert.ChangeType(value, targetType);
-
+            result = selected;
             validationErrorMessage = null;
-
             return true;
         }
-        catch
-        {
-            result = default;
-            validationErrorMessage = "Invalid selection.";
-            return false;
-        }
+
+        result = default;
+        validationErrorMessage = "Invalid selection.";
+        return false;
     }
 }

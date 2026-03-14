@@ -48,6 +48,7 @@ public static class MemoryStoredData
     {
         return
             [
+                new () {flngRoleKey = 0, fstrRoleName = "", fblnActive = true},
                 new () {flngRoleKey = 1, fstrRoleName = "Administrator", fblnActive = true},
                 new () {flngRoleKey = 2, fstrRoleName = "Manager", fblnActive = true},
                 new () {flngRoleKey = 3, fstrRoleName = "User", fblnActive = true},

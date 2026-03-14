@@ -3,7 +3,7 @@ using PortalWeb.Services;
 
 namespace PortalWeb.Dto;
 
-public class UserDto
+public class UserDto : IValidatableObject
 {
     public Guid flngUserKey { get; set; } = Guid.NewGuid();
 
@@ -36,4 +36,26 @@ public class UserDto
     public DateTime? fdtmEnd { get; set; } = null;
     public string fstrWho { get; set; } = "Batch";
     public DateTime fdtmWhen { get; set; } = DateTime.Now;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (fdtmStart.HasValue && fdtmEnd.HasValue)
+        {
+            if (fdtmEnd < fdtmStart)
+            {
+                yield return new ValidationResult(
+                    "Date To cannot be earlier than Date From",
+                    [nameof(fdtmEnd)]
+                );
+            }
+
+            if (fdtmEnd > fdtmStart.Value.AddYears(1))
+            {
+                yield return new ValidationResult(
+                    "Date To cannot exceed one year from Date From",
+                    [nameof(fdtmEnd)]
+                );
+            }
+        }
+    }
 }

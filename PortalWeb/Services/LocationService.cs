@@ -64,7 +64,7 @@ public class LocationService(ISqlDataAccess sqlDataAccess) : ILocationService
             parameters);
 
 
-            if (result == 1)
+            if (result >= 1)
             {
                 return insert
                     ? new() { Type = ToastType.Success, Message = "Location was added successfully" }
