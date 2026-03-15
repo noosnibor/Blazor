@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-@inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
 @inject UserSession User
 
@@ -37,8 +37,10 @@
 
     private async Task Logout()
     {
-        await AuthService.LogoutAsync();
-        Nav.NavigateTo("/", replace: true);
+        ((CustomAuthentication)AuthStateProvider)
+                       .NotifyUserLogout();
+        
+       Nav.NavigateTo("/", replace: true);
     }
 }
 

@@ -3,10 +3,12 @@
 @layout EmptyLayout
 @rendermode InteractiveServer
 
-@inject IAuthService AuthService
+@* @inject IAuthService AuthService *@
+@inject IAuthenticate Auth
 @inject NavigationManager Nav
 @inject ToastService ToastService
 @inject LoginModel Model
+@inject UserSession User
 @inject AuthenticationStateProvider AuthStateProvider
 
 @attribute [AllowAnonymous]
@@ -150,10 +152,10 @@
         try
         {
             submitting = true;
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             // Authenticate user
-            var (canLogin, message) = await AuthService.LoginAsync(parameter);
+            var (canLogin, message) = await Auth.ValidateCredentials(parameter);
 
             if (!canLogin && message.Contains("Change Password"))
             {
@@ -172,6 +174,9 @@
             }
             else
             {
+                 ((CustomAuthentication)AuthStateProvider)
+                       .NotifyUserAuthentication(User.Principal);
+
                 Nav.NavigateTo("/collection", replace: true);
             }
         }

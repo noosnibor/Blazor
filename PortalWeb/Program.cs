@@ -1,8 +1,10 @@
 using Custom.Toast.Extensions;
 using Custom.Toast.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Data.SqlClient;
 using PortalWeb.Components;
 using PortalWeb.Models;
@@ -19,8 +21,20 @@ builder.Services.AddRazorComponents()
 builder.Environment.IsDevelopment();
 builder.Environment.IsProduction();
 
+builder.Services.AddAuthentication(
+    CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddHttpContextAccessor();
+
 // Dependency Injection
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider,CustomAuthentication>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess.SqlDataAccess>();
 builder.Services.AddScoped<ILocationService, LocationService>();
@@ -29,8 +43,7 @@ builder.Services.AddScoped<ICollectionService, CollectionService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthenticate, Authenticate>();
 builder.Services.AddScoped<IGeneratePDFService, GeneratePDFService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddScoped<ToastService>();
@@ -57,23 +70,27 @@ builder.Services.AddAuthorizationCore(options =>
     }
 });
 
-builder.Services
-    .AddAuthentication("AuthCookie")
-    .AddCookie("AuthCookie", options =>
-    {
-        options.LoginPath = "/";
-        options.AccessDeniedPath = "/";
-        options.Events.OnRedirectToLogin = context =>
-        {
-            context.Response.StatusCode = 401;
-            return Task.CompletedTask;
-        };
-        options.Events.OnRedirectToAccessDenied = context =>
-        {
-            context.Response.StatusCode = 403;
-            return Task.CompletedTask;
-        };
-    });
+//builder.Services
+//    .AddAuthentication("AuthCookie")
+//    .AddCookie("AuthCookie", options =>
+//    {
+//        options.LoginPath = "/";
+//        options.AccessDeniedPath = "/";
+//        options.Events.OnRedirectToLogin = context =>
+//        {
+//            context.Response.StatusCode = 401;
+//            return Task.CompletedTask;
+//        };
+//        options.Events.OnRedirectToAccessDenied = context =>
+//        {
+//            context.Response.StatusCode = 403;
+//            return Task.CompletedTask;
+//        };
+//    });
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/home/data-protection-keys"))
+    .SetApplicationName("PortalWeb");
 
 var app = builder.Build();
 

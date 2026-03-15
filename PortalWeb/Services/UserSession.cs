@@ -1,4 +1,6 @@
-﻿namespace PortalWeb.Services;
+﻿using System.Security.Claims;
+
+namespace PortalWeb.Services;
 
 public record UserSession
 {
@@ -10,4 +12,5 @@ public record UserSession
     public string? CurrenyKey { get; set; }
     public string? CurrencyType { get; set; }
     public bool IsAuthenticated { get; set; }
+    public ClaimsPrincipal? Principal { get; set; }
 }
